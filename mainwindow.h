@@ -1,0 +1,34 @@
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+#include <QStackedWidget>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QKeyEvent>
+#include "gamewidget.h"
+
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class MainWindow;
+}
+QT_END_NAMESPACE
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+private:
+    Ui::MainWindow *ui;
+    QStackedWidget *stack;
+    QWidget *menuScreen;
+    GameWidget *gameScreen;
+    QWidget *endScreen;
+    QLabel *endLabel;
+};
+#endif // MAINWINDOW_H
