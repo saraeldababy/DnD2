@@ -1,10 +1,19 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-class Player
-{
-public:
-    Player();
-};
+#pragma once
+#include "character.h"
 
+class Player : public Character
+{
+private:
+    int health; //HEALTH
+public:
+    Player(int x = 0, int y = 0);
+
+    void move(int dx, int dy);
+
+    int getHealth() const;    //HEALTH
+    void takeDamage(int dmg);//HEALTH
+};
 #endif // PLAYER_H

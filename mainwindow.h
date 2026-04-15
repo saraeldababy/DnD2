@@ -6,7 +6,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QKeyEvent>
-#include "gamewidget.h"
+#include "gameview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -27,7 +27,7 @@ private:
     Ui::MainWindow *ui;
     QStackedWidget *stack;
     QWidget *menuScreen;
-    GameWidget *gameScreen;
+    GameView *gameScreen;
     QWidget *endScreen;
     QLabel *endLabel;
 };

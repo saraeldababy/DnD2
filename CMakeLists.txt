@@ -11,9 +11,13 @@ qt_add_executable(DungeonRealm
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
-    gamewidget.h gamewidget.cpp
+    gameview.h gameview.cpp
     dungeonmap.h dungeonmap.cpp
     player.h player.cpp
+    character.h character.cpp
+    enemy.h enemy.cpp
+    level.h level.cpp
+    game.h game.cpp
 )
 
 target_link_libraries(DungeonRealm

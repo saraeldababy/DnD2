@@ -1,3 +1,18 @@
 #include "player.h"
 
-Player::Player() {}
+Player::Player(int x, int y)
+    : Character(x, y), health(3) {}  //HEALTH(3) ADDED
+void Player::move(int dx, int dy)
+{
+    x += dx;
+    y += dy;
+}
+int Player::getHealth() const   //HEALTH
+{
+    return health;
+}
+
+void Player::takeDamage(int dmg) //HEALTH
+{
+    health -= dmg;
+}

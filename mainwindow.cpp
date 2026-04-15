@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "gamewidget.h"
+#include "gameview.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -22,22 +22,20 @@ MainWindow::MainWindow(QWidget *parent)
     menuLayout->addWidget(menuLabel);
 
     // GAME
-    gameScreen = new GameWidget(this);
-    connect(gameScreen, &GameWidget::gameWon, this, [=]()
+    gameScreen = new GameView(this);
+    connect(gameScreen, &GameView::gameWon, this, [=]()
             {
                 stack->setCurrentIndex(2); // end screen
             });
 
-    connect(gameScreen, &GameWidget::gameLost, this, [=]()
+    connect(gameScreen, &GameView::gameLost, this, [=]()
             {
                 stack->setCurrentIndex(2); // end screen
             });
 
     // END
-    endLabel = new QLabel("Game Over / You Win!\nPress R to restart");
-    endScreen = new QWidget(this);
-
     endLabel = new QLabel("Game Over / Win");
+    endScreen = new QWidget(this);
 
     QVBoxLayout *endLayout = new QVBoxLayout(endScreen);
     endLayout->addWidget(endLabel);
@@ -53,13 +51,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     // SIGNALS
     setFocusPolicy(Qt::StrongFocus);
-    connect(gameScreen, &GameWidget::gameWon, this, [=]()
+    connect(gameScreen, &GameView::gameWon, this, [=]()
             {
                 endLabel->setText("YOU WIN!\nPress R to restart");
                 stack->setCurrentIndex(2);
             });
 
-    connect(gameScreen, &GameWidget::gameLost, this, [=]()
+    connect(gameScreen, &GameView::gameLost, this, [=]()
             {
                 endLabel->setText("GAME OVER!\nPress R to restart");
                 stack->setCurrentIndex(2);
