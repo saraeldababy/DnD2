@@ -1,7 +1,14 @@
 build/
-*.user
 CMakeFiles/
-CMakeCache.txt
 cmake_install.cmake
 Makefile
+
+*.o
+*.obj
+*.exe
+
+*.user
+*.autosave
+
 .DS_Store
+*.pro.user
