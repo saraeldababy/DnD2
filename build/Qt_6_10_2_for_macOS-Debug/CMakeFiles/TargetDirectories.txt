@@ -1,0 +1,9 @@
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/DungeonRealm.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/edit_cache.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/rebuild_cache.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/list_install_components.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/install.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/install/local.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/install/strip.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/DungeonRealm_autogen_timestamp_deps.dir
+/Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/CMakeFiles/DungeonRealm_autogen.dir

@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_DungeonRealm_FILE /Users/saraeldababy/DungeonRealm/build/Qt_6_10_2_for_macOS-Debug/DungeonRealm.app/Contents/MacOS/DungeonRealm)
+set(__QT_DEPLOY_TARGET_DungeonRealm_TYPE EXECUTABLE)
