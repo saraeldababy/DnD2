@@ -7,7 +7,8 @@
 #include <QVBoxLayout>
 #include <QKeyEvent>
 #include "gameview.h"
-
+#include <QLineEdit>
+#include <QComboBox>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -30,5 +31,10 @@ private:
     GameView *gameScreen;
     QWidget *endScreen;
     QLabel *endLabel;
+QLineEdit *nameInput;
+QComboBox *roleBox;
+
+QString playerName;
+QString selectedRole;
 };
 #endif // MAINWINDOW_H

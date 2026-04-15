@@ -1,28 +1,58 @@
 #include "mainwindow.h"
 #include "gameview.h"
-
+#include <QLineEdit>
+#include <QComboBox>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     stack = new QStackedWidget(this);
 
     // MENU
-    menuScreen = new QWidget(this);
+//    menuScreen = new QWidget(this);
+//
+  //  QLabel *menuLabel = new QLabel(
+    //    "Welcome to Dungeon Realms!\n\n"
+      //  "Mission 1: Use your strategic skils to escape the fighter enemy!\n"
+        //"Rules:\n"
+        //"- Use the arrow keys to move\n"
+        //"- Your character is blue\n"
+        //"- Avoid the red enemy\n"
+        //"- Goal: Reach green exit\n\n"
+        //"Click ENTER to play if you accept the mission"
+        //);
 
-    QLabel *menuLabel = new QLabel(
-        "Welcome to Dungeon Realms!\n\n"
-        "Mission 1: Use your strategic skils to escape the fighter enemy!\n"
-        "Rules:\n"
-        "- Use the arrow keys to move\n"
-        "- Your character is blue\n"
-        "- Avoid the red enemy\n"
-        "- Goal: Reach green exit\n\n"
-        "Click ENTER to play if you accept the mission"
-        );
+    //QVBoxLayout *menuLayout = new QVBoxLayout(menuScreen);
+    //menuLayout->addWidget(menuLabel);
+menuScreen = new QWidget(this);
 
-    QVBoxLayout *menuLayout = new QVBoxLayout(menuScreen);
-    menuLayout->addWidget(menuLabel);
+QLabel *titleLabel = new QLabel("Welcome to Dungeons and Dragons, Level 1");
 
+QLabel *nameLabel = new QLabel("Enter your name:");
+nameInput = new QLineEdit(this);
+
+QLabel *roleLabel = new QLabel("Choose your role:");
+
+roleBox = new QComboBox(this);
+roleBox->addItem("Wizard");
+roleBox->addItem("Fighter");
+roleBox->addItem("Rogue");
+roleBox->addItem("Cleric");
+
+QLabel *rulesLabel = new QLabel(
+    "\nMission 1: Escape the enemy!\n"
+    "- Use arrow keys to move\n"
+    "- Avoid the red enemy\n"
+    "- Reach the green exit\n\n"
+    "Press ENTER to start"
+);
+
+QVBoxLayout *menuLayout = new QVBoxLayout(menuScreen);
+menuLayout->addWidget(titleLabel);
+menuLayout->addWidget(nameLabel);
+menuLayout->addWidget(nameInput);
+menuLayout->addWidget(roleLabel);
+menuLayout->addWidget(roleBox);
+menuLayout->addWidget(rulesLabel);
     // GAME
     gameScreen = new GameView(this);
     connect(gameScreen, &GameView::gameWon, this, [=]()
@@ -69,13 +99,24 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     // ENTER → start game from menu
-    if (stack->currentIndex() == 0 &&
-        event->key() == Qt::Key_Return)
-    {
-        stack->setCurrentIndex(1);
-    }
+    //if (stack->currentIndex() == 0 &&
+      //  event->key() == Qt::Key_Return)
+    //{
+      //  stack->setCurrentIndex(1);
+    //}
 
     // R → restart from end screen
+if (stack->currentIndex() == 0 &&
+    event->key() == Qt::Key_Return)
+{
+    playerName = nameInput->text();
+    selectedRole = roleBox->currentText();
+
+    if (playerName.isEmpty())
+        playerName = "Adventurer";
+
+    stack->setCurrentIndex(1);
+}
     if (stack->currentIndex() == 2 &&
         event->key() == Qt::Key_R)
     {
