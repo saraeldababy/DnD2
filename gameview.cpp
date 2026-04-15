@@ -32,25 +32,30 @@ void GameView::paintEvent(QPaintEvent *)
         }
     }
 
-    // player
+    //RECTANGLES
+    // // player
     // painter.fillRect(game.getPlayer().getX()*tileSize,
     //                  game.getPlayer().getY()*tileSize,
     //                  tileSize, tileSize, Qt::blue);
+    // // enemy
+    // painter.fillRect(game.getEnemy().getX()*tileSize,
+    //                  game.getEnemy().getY()*tileSize,
+    //                  tileSize, tileSize, Qt::red);
+
+    //ELLIPSE
+    //player
     painter.setBrush(Qt::blue);
     painter.drawEllipse(
         game.getPlayer().getX()*tileSize,
         game.getPlayer().getY()*tileSize,
         tileSize, tileSize);
-
-    // // enemy
-    // painter.fillRect(game.getEnemy().getX()*tileSize,
-    //                  game.getEnemy().getY()*tileSize,
-    //                  tileSize, tileSize, Qt::red);
+    //enemy
     painter.setBrush(Qt::red);
     painter.drawEllipse(
         game.getEnemy().getX()*tileSize,
         game.getEnemy().getY()*tileSize,
         tileSize, tileSize);
+
     //4PM WORKING
     //health
     // painter.drawText(10, 20,

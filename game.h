@@ -13,6 +13,7 @@ private:
     Player player;
     Enemy enemy;
     Level level;
+
     //4PM
     // int rollDice();     //DICE
     // bool inCombat;
@@ -24,6 +25,7 @@ public:
 
     void movePlayer(int dx, int dy);
     void updateEnemy();
+
     //4PM
     // void resolveCombat();
 
@@ -34,8 +36,9 @@ public:
     Player& getPlayer();
     Enemy& getEnemy();
 
-    int getLastPlayerRoll() const;
-    int getLastEnemyRoll() const;
+    //4PM
+    // int getLastPlayerRoll() const;
+    // int getLastEnemyRoll() const;
 };
 
 #endif // GAME_H

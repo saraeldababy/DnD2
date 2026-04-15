@@ -6,8 +6,10 @@
 
 class Player : public Character
 {
-private:
-    int health; //HEALTH
+//4PM
+// private:
+//     int health; //HEALTH
+
 public:
     Player(int x = 0, int y = 0);
 

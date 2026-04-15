@@ -2,12 +2,16 @@
 #include "level.h"
 #include "player.h"
 #include "enemy.h"
-#include <cstdlib>
+
+//4PM LIB FOR RAND()IN DICE
+//#include <cstdlib>
+
 Game::Game(int size)
 {
     level = Level(size);
     player = Player();
     enemy = Enemy();
+
     //4PM
     //inCombat = false;
 }
@@ -38,6 +42,7 @@ void Game::updateEnemy()
         level.gridSize,
         level.map
         );
+
     //4PM
     // combat happens if same tile
     // if (player.getX() == enemy.getX() &&
@@ -149,6 +154,7 @@ bool Game::checkLose()
 Player& Game::getPlayer() { return player; }
 Enemy& Game::getEnemy() { return enemy; }
 Level& Game::getLevel() { return level; }
+
 //4PM
 // int Game::getLastPlayerRoll() const { return lastPlayerRoll; }
 // int Game::getLastEnemyRoll() const { return lastEnemyRoll; }

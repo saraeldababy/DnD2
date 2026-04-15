@@ -31,6 +31,7 @@ void Enemy::moveToward(int targetX, int targetY, int gridSize, int map[20][20])
     int newX = x;
     int newY = y;
 
+    //COULD MOVE DIAGONALLY SO GAME IMPOSSIBLE TO WIN
     // // decide direction toward player
     // if (targetX > x) newX++;
     // else if (targetX < x) newX--;

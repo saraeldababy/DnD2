@@ -11,11 +11,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     QLabel *menuLabel = new QLabel(
         "Welcome to Dungeon Realms!\n\n"
+        "Mission 1: Use your strategic skils to escape the fighter enemy!\n"
         "Rules:\n"
         "- Use the arrow keys to move\n"
+        "- Your character is blue\n"
         "- Avoid the red enemy\n"
         "- Goal: Reach green exit\n\n"
-        "Click ENTER to play"
+        "Click ENTER to play if you accept the mission"
         );
 
     QVBoxLayout *menuLayout = new QVBoxLayout(menuScreen);
