@@ -3,7 +3,7 @@
 Player::Player()
 {
     x = 1;
-    y = 1;
+    y = 8;
     health = 100;
     role = "Wizard";
 }

@@ -12,11 +12,14 @@ class GameView : public QWidget
 
 private:
     Game game;
+    QString playerName = "Adventurer";
+    bool showIntroDialog = true;
 
 public:
     explicit GameView(QWidget *parent = nullptr);
 
     void resetGame(int size);
+    void setPlayerProfile(const QString &name, const QString &role);
 
 signals:
     void gameWon();

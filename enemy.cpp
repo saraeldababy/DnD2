@@ -2,8 +2,8 @@
 
 Enemy::Enemy()
 {
-    x = 7;
-    y = 7;
+    x = 3;
+    y = 2;
 }
 
 int Enemy::getX() const { return x; }
@@ -13,9 +13,13 @@ void Enemy::setX(int v) { x = v; }
 void Enemy::setY(int v) { y = v; }
 void Enemy::moveToward(int tx, int ty)
 {
-    if (x < tx) x++;
-    else if (x > tx) x--;
+    if (x < tx)
+        x++;
+    else if (x > tx)
+        x--;
 
-    if (y < ty) y++;
-    else if (y > ty) y--;
+    if (y < ty)
+        y++;
+    else if (y > ty)
+        y--;
 }
