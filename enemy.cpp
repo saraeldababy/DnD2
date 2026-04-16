@@ -1,24 +1,63 @@
-#include "enemy.h"
-#include <cstdlib>
+// #include "enemy.h"
+// #include <cstdlib>
 
-Enemy::Enemy(int x, int y)
-    : Character(x, y) {}
+// Enemy::Enemy(int x, int y)
+//     : Character(x, y) {}
 
-// void Enemy::moveRandom(int gridSize, int map[20][20])
+// // void Enemy::moveRandom(int gridSize, int map[20][20])
+// // {
+// //     int dir = rand() % 4;
+
+// //     int newX = x;
+// //     int newY = y;
+
+// //     if (dir == 0) newY--;
+// //     if (dir == 1) newY++;
+// //     if (dir == 2) newX--;
+// //     if (dir == 3) newX++;
+
+// //     if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize)
+// //         return;
+
+// //     if (map[newX][newY] == 1)
+// //         return;
+
+// //     x = newX;
+// //     y = newY;
+// // }
+
+// void Enemy::moveToward(int targetX, int targetY, int gridSize, int map[20][20])
 // {
-//     int dir = rand() % 4;
-
 //     int newX = x;
 //     int newY = y;
 
-//     if (dir == 0) newY--;
-//     if (dir == 1) newY++;
-//     if (dir == 2) newX--;
-//     if (dir == 3) newX++;
+//     //COULD MOVE DIAGONALLY SO GAME IMPOSSIBLE TO WIN
+//     // // decide direction toward player
+//     // if (targetX > x) newX++;
+//     // else if (targetX < x) newX--;
 
+//     // if (targetY > y) newY++;
+//     // else if (targetY < y) newY--;
+
+//     // decide whether to move in X or Y (NOT both)
+//     if (abs(targetX - x) > abs(targetY - y))
+//     {
+//         // move horizontally
+//         if (targetX > x) newX++;
+//         else if (targetX < x) newX--;
+//     }
+//     else
+//     {
+//         // move vertically
+//         if (targetY > y) newY++;
+//         else if (targetY < y) newY--;
+//     }
+
+//     // boundary check
 //     if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize)
 //         return;
 
+//     // wall check
 //     if (map[newX][newY] == 1)
 //         return;
 
@@ -26,41 +65,29 @@ Enemy::Enemy(int x, int y)
 //     y = newY;
 // }
 
-void Enemy::moveToward(int targetX, int targetY, int gridSize, int map[20][20])
+//CODEX
+#include "enemy.h"
+
+Enemy::Enemy()
 {
-    int newX = x;
-    int newY = y;
+    x = 3;
+    y = 2;
+}
 
-    //COULD MOVE DIAGONALLY SO GAME IMPOSSIBLE TO WIN
-    // // decide direction toward player
-    // if (targetX > x) newX++;
-    // else if (targetX < x) newX--;
+int Enemy::getX() const { return x; }
+int Enemy::getY() const { return y; }
 
-    // if (targetY > y) newY++;
-    // else if (targetY < y) newY--;
+void Enemy::setX(int v) { x = v; }
+void Enemy::setY(int v) { y = v; }
+void Enemy::moveToward(int tx, int ty)
+{
+    if (x < tx)
+        x++;
+    else if (x > tx)
+        x--;
 
-    // decide whether to move in X or Y (NOT both)
-    if (abs(targetX - x) > abs(targetY - y))
-    {
-        // move horizontally
-        if (targetX > x) newX++;
-        else if (targetX < x) newX--;
-    }
-    else
-    {
-        // move vertically
-        if (targetY > y) newY++;
-        else if (targetY < y) newY--;
-    }
-
-    // boundary check
-    if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize)
-        return;
-
-    // wall check
-    if (map[newX][newY] == 1)
-        return;
-
-    x = newX;
-    y = newY;
+    if (y < ty)
+        y++;
+    else if (y > ty)
+        y--;
 }

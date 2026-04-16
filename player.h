@@ -1,21 +1,48 @@
+// #ifndef PLAYER_H
+// #define PLAYER_H
+
+// #pragma once
+// #include "character.h"
+
+// class Player : public Character
+// {
+// //4PM
+// // private:
+// //     int health; //HEALTH
+
+// public:
+//     Player(int x = 0, int y = 0);
+
+//     void move(int dx, int dy);
+
+//     int getHealth() const;    //HEALTH
+//     void takeDamage(int dmg);//HEALTH
+// };
+// #endif // PLAYER_H
+
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#pragma once
-#include "character.h"
+#include <QString>
 
-class Player : public Character
+class Player
 {
-//4PM
-// private:
-//     int health; //HEALTH
+private:
+    int x, y;
+    int health;
+    QString role;
 
 public:
-    Player(int x = 0, int y = 0);
+    Player();
 
+    int getX() const;
+    int getY() const;
+
+    void setX(int);
+    void setY(int);
     void move(int dx, int dy);
-
-    int getHealth() const;    //HEALTH
-    void takeDamage(int dmg);//HEALTH
+    QString getRole() const;
+    void setRole(const QString &r);
 };
-#endif // PLAYER_H
+
+#endif

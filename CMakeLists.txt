@@ -33,6 +33,10 @@ target_link_libraries(DungeonRealm
 
 include(GNUInstallDirs)
 
+# install(TARGETS DungeonRealm
+#     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+# )
 install(TARGETS DungeonRealm
+    BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
