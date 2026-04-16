@@ -31,9 +31,9 @@ MainWindow::MainWindow(QWidget *parent)
         "\nStory: A shadow beast haunts the old forest road.\n"
         "Goal: Reach the cottage safely.\n\n"
         "How to play:\n"
-        "- Arrow keys move your hero on the grid\n"
-        "- Trees and river tiles block movement\n"
-        "- Cross the bridge, then follow the lantern path\n"
+        "- Arrow keys move your hero through the forest\n"
+        "- River water blocks movement, trees are passable\n"
+        "- Follow the lantern trail across the bridge\n"
         "- The enemy moves slowly (Level 1 is beginner-friendly)\n\n"
         "Press ENTER to begin"
     );
