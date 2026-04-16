@@ -1,10 +1,8 @@
 #include "game.h"
 
 Game::Game(int size)
+    : player(), enemy(), level(size)
 {
-    level = Level(size);
-    player = Player();
-    enemy = Enemy();
 }
 
 void Game::movePlayer(int dx, int dy)

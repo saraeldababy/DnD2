@@ -1,9 +1,8 @@
 #include "level.h"
 
-Level::Level(int size)
+void Level::allocateAndFill(int size)
 {
     gridSize = size;
-
     map = new int *[gridSize];
 
     for (int i = 0; i < gridSize; i++)
@@ -12,6 +11,25 @@ Level::Level(int size)
         for (int j = 0; j < gridSize; j++)
             map[i][j] = GRASS;
     }
+}
+
+void Level::clear()
+{
+    if (!map)
+        return;
+
+    for (int i = 0; i < gridSize; i++)
+        delete[] map[i];
+
+    delete[] map;
+    map = nullptr;
+    gridSize = 0;
+}
+
+Level::Level(int size)
+    : gridSize(0), map(nullptr)
+{
+    allocateAndFill(size);
 
     // Tree border for a forest feel.
     for (int i = 0; i < gridSize; ++i)
@@ -62,12 +80,55 @@ Level::Level(int size)
     map[7][3] = COTTAGE;
 }
 
+Level::Level(const Level &other)
+    : gridSize(0), map(nullptr)
+{
+    allocateAndFill(other.gridSize);
+
+    for (int i = 0; i < gridSize; ++i)
+        for (int j = 0; j < gridSize; ++j)
+            map[i][j] = other.map[i][j];
+}
+
+Level &Level::operator=(const Level &other)
+{
+    if (this == &other)
+        return *this;
+
+    clear();
+    allocateAndFill(other.gridSize);
+
+    for (int i = 0; i < gridSize; ++i)
+        for (int j = 0; j < gridSize; ++j)
+            map[i][j] = other.map[i][j];
+
+    return *this;
+}
+
+Level::Level(Level &&other) noexcept
+    : gridSize(other.gridSize), map(other.map)
+{
+    other.gridSize = 0;
+    other.map = nullptr;
+}
+
+Level &Level::operator=(Level &&other) noexcept
+{
+    if (this == &other)
+        return *this;
+
+    clear();
+    gridSize = other.gridSize;
+    map = other.map;
+
+    other.gridSize = 0;
+    other.map = nullptr;
+    return *this;
+}
+
 Level::~Level()
 {
-    for (int i = 0; i < gridSize; i++)
-        delete[] map[i];
-
-    delete[] map;
+    clear();
 }
 
 bool Level::isWalkable(int x, int y) const
