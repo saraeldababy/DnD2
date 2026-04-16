@@ -81,7 +81,7 @@ void GameView::paintEvent(QPaintEvent *)
 
     // Lanterns along the path so the route is visible.
     const QVector<QPoint> lanternTiles = {
-        QPoint(2, 8), QPoint(4, 8), QPoint(6, 8), QPoint(5, 7), QPoint(5, 6)
+        QPoint(2, 8), QPoint(4, 8), QPoint(5, 7), QPoint(5, 6)
     };
     for (const QPoint &p : lanternTiles)
     {
@@ -126,7 +126,8 @@ void GameView::paintEvent(QPaintEvent *)
     painter.setBrush(QColor(236, 207, 169));
     painter.drawEllipse(px + 16, py + 4, 16, 16);
     painter.setPen(QPen(QColor(210, 190, 126), 3));
-    painter.drawLine(px + 34, py + 14, px + 40, py + 34);
+    painter.drawLine(px + 34, py + 14, px + 40, py + 34); // right arm/staff
+    painter.drawLine(px + 14, py + 14, px + 8, py + 34);  // left arm
 
     // Enemy sprite: shadow body and glowing eyes.
     const int ex = offsetX + game.getEnemy().getX() * tileSize;

@@ -137,5 +137,5 @@ bool Level::isWalkable(int x, int y) const
         return false;
 
     const int tile = map[x][y];
-    return tile != RIVER;
+    return tile != TREE && tile != RIVER;
 }

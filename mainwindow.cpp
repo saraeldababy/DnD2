@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
         "Goal: Reach the cottage safely.\n\n"
         "How to play:\n"
         "- Arrow keys move your hero through the forest\n"
-        "- River water blocks movement, trees are passable\n"
+        "- Trees and river water both block movement\n"
         "- Follow the lantern trail across the bridge\n"
         "- The shadow chases you immediately, so keep moving\n\n"
         "Press ENTER to begin"
