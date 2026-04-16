@@ -92,12 +92,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (playerName.isEmpty())
             playerName = "Adventurer";
 
+        gameScreen->setPlayerProfile(playerName, selectedRole);
         stack->setCurrentIndex(1);
     }
 
     if (stack->currentIndex() == 2 && event->key() == Qt::Key_R)
     {
         gameScreen->resetGame(10);
+        gameScreen->setPlayerProfile(playerName, selectedRole);
         stack->setCurrentIndex(1);
     }
 }

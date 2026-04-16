@@ -53,31 +53,37 @@ Level::Level(int size)
         map[7][y] = TREE;
     }
 
-    // A river crossing the level.
-    for (int y = 1; y < gridSize - 1; ++y)
+    // A horizontal river crossing the level.
+    for (int x = 1; x < gridSize - 1; ++x)
     {
-        map[5][y] = RIVER;
+        map[x][5] = RIVER;
     }
 
-    // One easy crossing point.
-    map[5][5] = BRIDGE;
+    // Vertical bridge crossing the river.
+    map[8][4] = BRIDGE;
+    map[8][5] = BRIDGE;
+    map[8][6] = BRIDGE;
 
-    // Story path from start to cottage.
+    // Story path: right -> up -> left.
     for (int x = 1; x <= 8; ++x)
-    {
         map[x][8] = PATH;
-    }
-    for (int y = 5; y <= 8; ++y)
-    {
-        map[5][y] = PATH;
-    }
-    map[5][5] = BRIDGE;
 
-    // Cottage goal tile.
-    map[8][2] = COTTAGE;
-    map[8][3] = COTTAGE;
-    map[7][2] = COTTAGE;
-    map[7][3] = COTTAGE;
+    for (int y = 3; y <= 8; ++y)
+        map[8][y] = PATH;
+
+    for (int x = 3; x <= 8; ++x)
+        map[x][3] = PATH;
+
+    // Keep bridge visible and walkable as bridge tiles.
+    map[8][4] = BRIDGE;
+    map[8][5] = BRIDGE;
+    map[8][6] = BRIDGE;
+
+    // Cottage goal tile area at the end of the leftward path.
+    map[2][2] = COTTAGE;
+    map[3][2] = COTTAGE;
+    map[2][3] = COTTAGE;
+    map[3][3] = COTTAGE;
 }
 
 Level::Level(const Level &other)
