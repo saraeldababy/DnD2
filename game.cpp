@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include <cstdlib>
+
 Game::Game(int size)
     : player(), enemy(), level(size)
 {
@@ -32,25 +34,43 @@ void Game::movePlayer(int dx, int dy)
 
 void Game::updateEnemy()
 {
-    // Harder pacing: enemy advances every player turn.
+    // Smarter chase: one-axis step per turn with fallback if blocked.
     const int px = player.getX();
     const int py = player.getY();
 
     int ex = enemy.getX();
     int ey = enemy.getY();
 
-    const int stepX = (px > ex) ? 1 : ((px < ex) ? -1 : 0);
-    const int stepY = (py > ey) ? 1 : ((py < ey) ? -1 : 0);
+    const int dx = px - ex;
+    const int dy = py - ey;
+    const int stepX = (dx > 0) ? 1 : ((dx < 0) ? -1 : 0);
+    const int stepY = (dy > 0) ? 1 : ((dy < 0) ? -1 : 0);
 
-    // Try both axes so the shadow actively chases from the beginning.
-    if (stepX != 0 && level.isWalkable(ex + stepX, ey))
-        ex += stepX;
+    auto tryStep = [&](int nx, int ny) -> bool {
+        if (!level.isWalkable(nx, ny))
+            return false;
 
-    if (stepY != 0 && level.isWalkable(ex, ey + stepY))
-        ey += stepY;
+        enemy.setX(nx);
+        enemy.setY(ny);
+        return true;
+    };
 
-    enemy.setX(ex);
-    enemy.setY(ey);
+    const bool preferX = std::abs(dx) >= std::abs(dy);
+
+    if (preferX)
+    {
+        if (stepX != 0 && tryStep(ex + stepX, ey))
+            return;
+        if (stepY != 0)
+            tryStep(ex, ey + stepY);
+    }
+    else
+    {
+        if (stepY != 0 && tryStep(ex, ey + stepY))
+            return;
+        if (stepX != 0)
+            tryStep(ex + stepX, ey);
+    }
 }
 
 bool Game::checkWin()
