@@ -32,10 +32,7 @@ void Game::movePlayer(int dx, int dy)
 
 void Game::updateEnemy()
 {
-    // Make level 1 forgiving: enemy only moves every other player turn.
-    if (turns % 2 != 0)
-        return;
-
+    // Harder pacing: enemy advances every player turn.
     const int px = player.getX();
     const int py = player.getY();
 
@@ -45,14 +42,12 @@ void Game::updateEnemy()
     const int stepX = (px > ex) ? 1 : ((px < ex) ? -1 : 0);
     const int stepY = (py > ey) ? 1 : ((py < ey) ? -1 : 0);
 
+    // Try both axes so the shadow actively chases from the beginning.
     if (stepX != 0 && level.isWalkable(ex + stepX, ey))
-    {
         ex += stepX;
-    }
-    else if (stepY != 0 && level.isWalkable(ex, ey + stepY))
-    {
+
+    if (stepY != 0 && level.isWalkable(ex, ey + stepY))
         ey += stepY;
-    }
 
     enemy.setX(ex);
     enemy.setY(ey);

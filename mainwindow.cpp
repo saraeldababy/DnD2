@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
         "- Arrow keys move your hero through the forest\n"
         "- River water blocks movement, trees are passable\n"
         "- Follow the lantern trail across the bridge\n"
-        "- The enemy moves slowly (Level 1 is beginner-friendly)\n\n"
+        "- The shadow chases you immediately, so keep moving\n\n"
         "Press ENTER to begin"
     );
 
