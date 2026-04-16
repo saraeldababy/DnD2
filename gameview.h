@@ -1,37 +1,3 @@
-// #ifndef GAMEVIEW_H
-// #define GAMEVIEW_H
-
-// #pragma once
-// #include <QWidget>
-// #include <QPainter>
-// #include <QKeyEvent>
-// #include "game.h"
-
-// class GameView : public QWidget
-// {
-//     Q_OBJECT
-
-// private:
-//     Game game;
-//     int tileSize;
-
-// public:
-//     GameView(QWidget *parent = nullptr);
-//     void resetGame(int size);
-
-// signals:
-//     void gameWon();
-//     void gameLost();
-
-// protected:
-//     void paintEvent(QPaintEvent *) override;
-//     void keyPressEvent(QKeyEvent *event) override;
-// };
-
-// #endif
-
-//CODEX
-
 #ifndef GAMEVIEW_H
 #define GAMEVIEW_H
 

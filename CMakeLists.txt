@@ -17,7 +17,7 @@ qt_add_executable(DungeonRealm
     mainwindow.ui
 
     gameview.h gameview.cpp
-    dungeonmap.h dungeonmap.cpp
+
     player.h player.cpp
     character.h character.cpp
     enemy.h enemy.cpp
