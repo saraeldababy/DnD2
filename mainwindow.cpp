@@ -12,13 +12,23 @@ MainWindow::MainWindow(QWidget *parent)
 
     menuScreen = new QWidget(this);
     menuScreen->setStyleSheet(
-        "background-color: #1f1a1a;"
-        "color: #f2e6c8;"
+        "background-color: #3a2c20;"  // warmer medieval brown
+        "color: #f8edd2;"
+        "QLabel { color: #f8edd2; }"
+        "QLineEdit, QComboBox {"
+        "  background-color: #f3e4bf;"
+        "  color: #2d1d12;"
+        "  border: 2px solid #a4794b;"
+        "  border-radius: 6px;"
+        "  padding: 4px;"
+        "}"
+        "QLineEdit::placeholder { color: #6b5542; }"
     );
 
     QLabel *titleLabel = new QLabel("Dungeon Realms: The Whispering Forest");
     QLabel *nameLabel = new QLabel("Adventurer name:");
     nameInput = new QLineEdit(this);
+    nameInput->setPlaceholderText("Type your adventurer name");
     QLabel *roleLabel = new QLabel("Choose your class:");
 
     roleBox = new QComboBox(this);
