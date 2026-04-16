@@ -3,20 +3,33 @@
 Level::Level(int size)
 {
     gridSize = size;
-    setup();
+
+    map = new int*[gridSize];
+
+    for (int i = 0; i < gridSize; i++)
+    {
+        map[i] = new int[gridSize];
+        for (int j = 0; j < gridSize; j++)
+            map[i][j] = GRASS;
+    }
+
+    // forest
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < gridSize; j++)
+            map[i][j] = TREE;
+
+    // river
+    for (int j = 2; j < gridSize - 2; j++)
+        map[5][j] = RIVER;
+
+    // cottage (goal)
+    map[8][8] = COTTAGE;
 }
 
-void Level::setup()
+Level::~Level()
 {
     for (int i = 0; i < gridSize; i++)
-        for (int j = 0; j < gridSize; j++)
-            map[i][j] = 0;
+        delete[] map[i];
 
-    // walls
-    map[2][2] = 1;
-    map[2][3] = 1;
-    map[2][4] = 1;
-
-    // exit
-    map[gridSize - 1][gridSize - 1] = 2;
+    delete[] map;
 }

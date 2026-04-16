@@ -1,7 +1,6 @@
 #ifndef GAMEVIEW_H
 #define GAMEVIEW_H
 
-#pragma once
 #include <QWidget>
 #include <QPainter>
 #include <QKeyEvent>
@@ -13,10 +12,10 @@ class GameView : public QWidget
 
 private:
     Game game;
-    int tileSize;
 
 public:
-    GameView(QWidget *parent = nullptr);
+    explicit GameView(QWidget *parent = nullptr);
+
     void resetGame(int size);
 
 signals:
@@ -24,7 +23,7 @@ signals:
     void gameLost();
 
 protected:
-    void paintEvent(QPaintEvent *) override;
+    void paintEvent(QPaintEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
 };
 

@@ -2,6 +2,8 @@
 #include "gameview.h"
 #include <QLineEdit>
 #include <QComboBox>
+#include <QFont>
+#include <QFontDatabase>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -24,12 +26,13 @@ MainWindow::MainWindow(QWidget *parent)
     //QVBoxLayout *menuLayout = new QVBoxLayout(menuScreen);
     //menuLayout->addWidget(menuLabel);
 menuScreen = new QWidget(this);
-
+menuScreen->setStyleSheet(
+    "background-color: #1e1b18;"
+    "color: #e6d3a3;"
+);
 QLabel *titleLabel = new QLabel("Welcome to Dungeons and Dragons, Level 1");
-
 QLabel *nameLabel = new QLabel("Enter your name:");
 nameInput = new QLineEdit(this);
-
 QLabel *roleLabel = new QLabel("Choose your role:");
 
 roleBox = new QComboBox(this);
@@ -45,14 +48,22 @@ QLabel *rulesLabel = new QLabel(
     "- Reach the green exit\n\n"
     "Press ENTER to start"
 );
+QFont titleFont("Georgia", 20, QFont::Bold);
+QFont bodyFont("Georgia", 12);
+titleLabel->setFont(titleFont);
 
+nameLabel->setFont(bodyFont);
+roleLabel->setFont(bodyFont);
+rulesLabel->setFont(bodyFont);
 QVBoxLayout *menuLayout = new QVBoxLayout(menuScreen);
+menuLayout->setAlignment(Qt::AlignCenter);
 menuLayout->addWidget(titleLabel);
 menuLayout->addWidget(nameLabel);
 menuLayout->addWidget(nameInput);
 menuLayout->addWidget(roleLabel);
 menuLayout->addWidget(roleBox);
 menuLayout->addWidget(rulesLabel);
+menuLayout->addSpacing(10);
     // GAME
     gameScreen = new GameView(this);
     connect(gameScreen, &GameView::gameWon, this, [=]()

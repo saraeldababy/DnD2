@@ -5,10 +5,17 @@ class Level
 {
 public:
     int gridSize;
-    int map[20][20];
+    int **map;
+
+    enum TileType {
+        GRASS = 0,
+        TREE = 1,
+        COTTAGE = 2,
+        RIVER = 3
+    };
 
     Level(int size = 10);
-    void setup();
+    ~Level();
 };
 
 #endif

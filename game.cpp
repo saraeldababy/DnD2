@@ -18,30 +18,18 @@ Game::Game(int size)
 
 void Game::movePlayer(int dx, int dy)
 {
-    int newX = player.getX() + dx;
-    int newY = player.getY() + dy;
-
-    // boundary check
-    if (newX < 0 || newX >= level.gridSize ||
-        newY < 0 || newY >= level.gridSize)
-        return;
-
-    // wall check
-    if (level.map[newX][newY] == 1)
-        return;
-
     player.move(dx, dy);
+
+    if (player.getX() > 580 && player.getY() > 240)
+    {
+        advanceStory();
+    }
 }
 
 void Game::updateEnemy()
 {
     // enemy.moveRandom(level.gridSize, level.map);
-    enemy.moveToward(
-        player.getX(),
-        player.getY(),
-        level.gridSize,
-        level.map
-        );
+    enemy.moveToward(player.getX(), player.getY());
 
     //4PM
     // combat happens if same tile
@@ -136,7 +124,11 @@ void Game::updateEnemy()
 
 bool Game::checkWin()
 {
-    return level.map[player.getX()][player.getY()] == 2;
+    int px = player.getX();
+    int py = player.getY();
+
+    return (px > 580 && px < 720 &&
+            py > 240 && py < 380);
 }
 
 bool Game::checkLose()
@@ -158,3 +150,11 @@ Level& Game::getLevel() { return level; }
 //4PM
 // int Game::getLastPlayerRoll() const { return lastPlayerRoll; }
 // int Game::getLastEnemyRoll() const { return lastEnemyRoll; }
+void Game::advanceStory()
+{
+    storyState++;
+}
+int Game::getStoryState() const
+{
+    return storyState;
+}

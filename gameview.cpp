@@ -1,96 +1,76 @@
 #include "gameview.h"
 #include <QPainter>
-#include <QKeyEvent>
 
 GameView::GameView(QWidget *parent)
-    : QWidget(parent), tileSize(40)
+    : QWidget(parent)
 {
     setFocusPolicy(Qt::StrongFocus);
-    setFixedSize(10 * tileSize, 10 * tileSize);
+    setFixedSize(800, 600);
 }
 
 void GameView::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
 
-    Level &level = game.getLevel();
+    // ===== SKY / BACKGROUND =====
+    painter.fillRect(rect(), QColor(25, 25, 40));
 
-    for (int i = 0; i < level.gridSize; i++)
-    {
-        for (int j = 0; j < level.gridSize; j++)
-        {
-            int x = i * tileSize;
-            int y = j * tileSize;
+    // ===== FOREST GROUND =====
+    painter.setBrush(QColor(34, 85, 34));
+    painter.drawRect(0, 200, 800, 400);
 
-            if (level.map[i][j] == 1)
-                painter.fillRect(x,y,tileSize,tileSize,Qt::black);
+    // ===== RIVER =====
+    painter.setBrush(QColor(30, 144, 255));
+    painter.drawRect(350, 0, 100, 600);
 
-            else if (level.map[i][j] == 2)
-                painter.fillRect(x,y,tileSize,tileSize,Qt::green);
+    // ===== COTTAGE =====
+    painter.setBrush(QColor(139, 69, 19));
+    painter.drawRect(600, 250, 120, 120);
 
-            painter.drawRect(x,y,tileSize,tileSize);
-        }
-    }
+    // ===== PLAYER =====
+    painter.setBrush(QColor(120, 180, 255));
+    painter.drawEllipse(game.getPlayer().getX(),
+                        game.getPlayer().getY(),
+                        30, 30);
 
-    //RECTANGLES
-    // // player
-    // painter.fillRect(game.getPlayer().getX()*tileSize,
-    //                  game.getPlayer().getY()*tileSize,
-    //                  tileSize, tileSize, Qt::blue);
-    // // enemy
-    // painter.fillRect(game.getEnemy().getX()*tileSize,
-    //                  game.getEnemy().getY()*tileSize,
-    //                  tileSize, tileSize, Qt::red);
+    // ===== ENEMY =====
+    painter.setBrush(QColor(200, 60, 60));
+    painter.drawEllipse(game.getEnemy().getX(),
+                        game.getEnemy().getY(),
+                        35, 35);
 
-    //ELLIPSE
-    //player
-    painter.setBrush(Qt::blue);
-    painter.drawEllipse(
-        game.getPlayer().getX()*tileSize,
-        game.getPlayer().getY()*tileSize,
-        tileSize, tileSize);
-    //enemy
-    painter.setBrush(Qt::red);
-    painter.drawEllipse(
-        game.getEnemy().getX()*tileSize,
-        game.getEnemy().getY()*tileSize,
-        tileSize, tileSize);
+    // ===== STORY TEXT =====
+    painter.setPen(Qt::white);
+    painter.setFont(QFont("Times", 14));
 
-    //4PM WORKING
-    //health
-    // painter.drawText(10, 20,
-    //                  "HP: " + QString::number(game.getPlayer().getHealth()));
-    // QString ui =
-    //     "HP: " + QString::number(game.getPlayer().getHealth()) +
-    //     "  Player Roll: " + QString::number(game.getLastPlayerRoll()) +
-    //     "  Enemy Roll: " + QString::number(game.getLastEnemyRoll());
-
-    //painter.drawText(10, 20, ui);
+    painter.drawText(20, 30, "Level 1: The Haunted Forest");
+    painter.drawText(20, 55, "Escape... or defeat the shadow beast near the cottage.");
+if (game.getStoryState() == 1)
+{
+    painter.drawText(20, 80, "You reached the cottage... something feels wrong.");
+}
 }
 
 void GameView::keyPressEvent(QKeyEvent *event)
 {
     int dx = 0, dy = 0;
 
-    if (event->key() == Qt::Key_Up) dy--;
-    else if (event->key() == Qt::Key_Down) dy++;
-    else if (event->key() == Qt::Key_Left) dx--;
-    else if (event->key() == Qt::Key_Right) dx++;
+    if (event->key() == Qt::Key_Up) dy -= 10;
+    else if (event->key() == Qt::Key_Down) dy += 10;
+    else if (event->key() == Qt::Key_Left) dx -= 10;
+    else if (event->key() == Qt::Key_Right) dx += 10;
 
-    if (dx || dy)
-    {
-        game.movePlayer(dx, dy);
-        game.updateEnemy();
+    game.movePlayer(dx, dy);
+    game.updateEnemy();
 
-        if (game.checkLose()) emit gameLost();
-        if (game.checkWin()) emit gameWon();
+    if (game.checkWin()) emit gameWon();
+    if (game.checkLose()) emit gameLost();
 
-        update();
-    }
+    update();
 }
+
 void GameView::resetGame(int size)
 {
     game = Game(size);
-    setFixedSize(size * tileSize, size * tileSize);
     update();
 }

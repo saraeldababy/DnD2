@@ -13,7 +13,7 @@ private:
     Player player;
     Enemy enemy;
     Level level;
-
+    int storyState = 0;   
     //4PM
     // int rollDice();     //DICE
     // bool inCombat;
@@ -22,10 +22,10 @@ private:
 
 public:
     Game(int size = 10);
-
+int getStoryState() const;
     void movePlayer(int dx, int dy);
     void updateEnemy();
-
+ void advanceStory(); 
     //4PM
     // void resolveCombat();
 
