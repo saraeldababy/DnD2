@@ -7,6 +7,7 @@
 #include <QVBoxLayout>
 #include <QKeyEvent>
 #include "gameview.h"
+#include "level2view.h"
 #include <QLineEdit>
 #include <QComboBox>
 QT_BEGIN_NAMESPACE
@@ -31,6 +32,7 @@ private:
     GameView *gameScreen;
     QWidget *endScreen;
     QLabel *endLabel;
+    Level2View *level2Screen;
 QLineEdit *nameInput;
 QComboBox *roleBox;
 

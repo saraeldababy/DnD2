@@ -17,7 +17,9 @@ qt_add_executable(DungeonRealm
     mainwindow.ui
 
     gameview.h gameview.cpp
-    dungeonmap.h dungeonmap.cpp
+    level2view.h level2view.cpp
+    witchscene.h witchscene.cpp
+
     player.h player.cpp
     character.h character.cpp
     enemy.h enemy.cpp
@@ -33,6 +35,10 @@ target_link_libraries(DungeonRealm
 
 include(GNUInstallDirs)
 
+# install(TARGETS DungeonRealm
+#     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+# )
 install(TARGETS DungeonRealm
+    BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
