@@ -17,17 +17,19 @@ static bool staticWalkable(int x, int y)
 Game::Game(int /*size*/)
     : phase(Phase::LEVEL1_EXPLORE), currentLevel(1),
     storyState(0), turns(0),
-    riddleIndex(0), riddleAnswered(false), riddleCorrect(false), riddleAttempts(0),
+    witchScene(nullptr),
+    leverProgress(0), leverStrikes(0), leverGateOpen(false),
     cellUnlocked(false), dragonDefeated(false),
     hasSword(false), megaFireWarningActive(false),
     alarmActive(false), guardsChasing(false),
     damageCooldown(0), storyMsgTimer(0)
 {
     for (int i = 0; i < 4; ++i) doorsOpened[i] = false;
+    for (int i = 0; i < 4; ++i) leverLocked[i] = false;
     buildLevel1();
 }
 
-Game::~Game() { clearEnemies(); }
+Game::~Game() { clearEnemies(); delete witchScene; }
 
 void Game::clearEnemies()
 {
@@ -65,13 +67,152 @@ void Game::buildLevel1()
 
 void Game::buildLevel2()
 {
-    // Implemented by partner
+    clearEnemies();
+    projectiles.clear();
+    flashEvents.clear();
+    damageCooldown = 0;
 
+    // 10×10 grid — corridor uses rows 0-4, rest are walls
+    level = Level(10);
+    g_levelPtr = &level;
+
+    for (int x = 0; x < 10; ++x)
+        for (int y = 0; y < 10; ++y)
+            level.map[x][y] = Level::WALL;
+
+    // Corridor interior: rows 1-3
+    for (int x = 1; x <= 8; ++x)
+        for (int y = 1; y <= 3; ++y)
+            level.map[x][y] = Level::FLOOR;
+
+    // Outer corridor walls
+    for (int x = 0; x < 10; ++x) {
+        level.map[x][0] = Level::WALL;
+        level.map[x][4] = Level::WALL;
+    }
+    for (int y = 1; y <= 3; ++y) {
+        level.map[0][y] = Level::WALL;
+        level.map[9][y] = Level::WALL;
+    }
+
+    // Door to witch room (right wall, centre)
+    level.map[9][2] = Level::DOOR;
+
+    // Chests (contain potions)
+    level.map[3][1] = Level::CHEST;
+    level.map[4][3] = Level::CHEST;
+
+    // Spike traps
+    enemies.append(new TrapEnemy(5, 2, 0, 20));
+    enemies.append(new TrapEnemy(7, 3, 1, 20));
+
+    delete witchScene;
+    witchScene = new WitchScene(player.getRole());
+
+    phase = Phase::LEVEL2_CORRIDOR;
+    player.setX(1);
+    player.setY(2);
+
+    storyMessages.clear();
+    storyMessages.append("The witch's cottage... navigate the corridor and find the door.");
+    storyMessages.append("Chests hold potions. Watch for floor traps!");
+    storyMsgTimer = 200;
 }
 
 void Game::buildLevel3()
 {
-    // Implemented by partner
+    clearEnemies();
+    projectiles.clear();
+    flashEvents.clear();
+    damageCooldown = 0;
+    gargoyles.clear();
+
+    // 14×14 gargoyle arena
+    level = Level(14);
+    g_levelPtr = &level;
+
+    for (int x = 0; x < 14; ++x)
+        for (int y = 0; y < 14; ++y)
+            level.map[x][y] = Level::FLOOR;
+
+    // Outer walls
+    for (int i = 0; i < 14; ++i) {
+        level.map[i][0]  = Level::WALL;
+        level.map[i][13] = Level::WALL;
+        level.map[0][i]  = Level::WALL;
+        level.map[13][i] = Level::WALL;
+    }
+
+    // Pillars for cover
+    level.map[4][4] = Level::WALL;
+    level.map[4][9] = Level::WALL;
+    level.map[7][4] = Level::WALL;
+    level.map[7][9] = Level::WALL;
+
+    // Three gargoyles on right side
+    gargoyles.append({11, 2,  3, true});
+    gargoyles.append({11, 7,  3, true});
+    gargoyles.append({11, 11, 3, true});
+
+    phase = Phase::LEVEL3_SPLASH;
+    player.setX(2);
+    player.setY(7);
+    player.resetForLevel(2, 7);
+
+    storyMessages.clear();
+    storyMsgTimer = 0;
+}
+
+static QVector<int> correctLeverSequence(const QString &role)
+{
+    if (role == "Wizard")  return {1, 3, 0, 2};
+    if (role == "Fighter") return {2, 0, 3, 1};
+    if (role == "Rogue")   return {3, 2, 1, 0};
+    return {0, 1, 2, 3}; // Cleric
+}
+
+void Game::buildLevel3Corridor()
+{
+    clearEnemies();
+
+    // Rebuild the 14×14 map as a 7-row corridor
+    for (int x = 0; x < 14; ++x)
+        for (int y = 0; y < 14; ++y)
+            level.map[x][y] = Level::WALL;
+
+    // Walkable corridor rows 1-5
+    for (int x = 1; x <= 12; ++x)
+        for (int y = 1; y <= 5; ++y)
+            level.map[x][y] = Level::FLOOR;
+
+    // Gate (closed) at (12,3)
+    level.map[12][3] = Level::LOCKED;
+
+    // Spike traps as TrapEnemy on FLOOR tiles
+    const QPoint spikes[] = {{4,1},{8,1},{3,3},{9,5},{5,5},{3,5},{10,3}};
+    for (int i = 0; i < 7; ++i)
+        enemies.append(new TrapEnemy(spikes[i].x(), spikes[i].y(), i, 20));
+
+    // Levers — index matches correct-sequence logic
+    level.map[1][1]  = Level::LEVER;   // index 0
+    level.map[1][5]  = Level::LEVER;   // index 1
+    level.map[11][5] = Level::LEVER;   // index 2
+    level.map[11][1] = Level::LEVER;   // index 3
+
+    // Reset lever state
+    leverProgress = 0;
+    leverStrikes  = 0;
+    for (int i = 0; i < 4; ++i) leverLocked[i] = false;
+    leverGateOpen = false;
+
+    phase = Phase::LEVEL3_CORRIDOR;
+    player.setX(1);
+    player.setY(3);
+
+    storyMessages.clear();
+    storyMessages.append("Four levers — pull them in the order from the poem!");
+    storyMessages.append("Three wrong pulls and the curse claims you.");
+    storyMsgTimer = 200;
 }
 
 // void Game::buildLevel4()
@@ -343,7 +484,8 @@ bool Game::levelWalkable(int x, int y) const
 void Game::movePlayer(int dx, int dy)
 {
     if (dx == 0 && dy == 0) return;
-    if (phase == Phase::LEVEL2_RIDDLE) return;
+    if (phase == Phase::LEVEL2_WITCH_ROOM) return;
+    if (phase == Phase::LEVEL3_SPLASH || phase == Phase::LEVEL3_BRIEFING || phase == Phase::LEVEL3_POEM) return;
     if (damageCooldown > 0) damageCooldown--;
 
     const int nx = player.getX() + dx;
@@ -384,6 +526,28 @@ void Game::movePlayer(int dx, int dy)
         flashEvents.append({player.getX(), player.getY(), 20, "treasure"});
         storyMessages.prepend("Found a health potion in the chest!");
         storyMsgTimer = 120;
+    }
+
+    // Level 2: entering witch room via door
+    if (phase == Phase::LEVEL2_CORRIDOR && tile == Level::DOOR)
+    {
+        phase = Phase::LEVEL2_WITCH_ROOM;
+        if (witchScene) witchScene->advanceDialogue();
+        storyMessages.clear();
+        storyMsgTimer = 0;
+    }
+
+    // Level 3 corridor: lever interaction
+    if (phase == Phase::LEVEL3_CORRIDOR && tile == Level::LEVER)
+    {
+        int lx = player.getX(), ly = player.getY();
+        int leverIdx = -1;
+        if (lx == 1  && ly == 1) leverIdx = 0;
+        else if (lx == 1  && ly == 5) leverIdx = 1;
+        else if (lx == 11 && ly == 5) leverIdx = 2;
+        else if (lx == 11 && ly == 1) leverIdx = 3;
+        if (leverIdx >= 0 && !leverLocked[leverIdx])
+            pullLever(leverIdx);
     }
 
     // Level 4: locked door unlock + traps
@@ -430,7 +594,7 @@ void Game::movePlayer(int dx, int dy)
     if (phase == Phase::LEVEL4_NAVIGATE && tile == Level::KEY_TILE && !alarmActive)
         triggerAlarm();
 
-    if (phase == Phase::LEVEL4_NAVIGATE || phase == Phase::LEVEL5_DRAGON)
+    if (phase == Phase::LEVEL4_NAVIGATE || phase == Phase::LEVEL5_DRAGON || phase == Phase::LEVEL3_CORRIDOR)
     {
         for (auto *e : enemies) {
             if (e->getType() == EnemyType::TRAP && !e->isDefeated()) {
@@ -484,7 +648,45 @@ void Game::movePlayer(int dx, int dy)
 
 void Game::playerAttack()
 {
-    if (phase == Phase::LEVEL2_RIDDLE) return;
+    if (phase == Phase::LEVEL2_WITCH_ROOM) return;
+    if (phase == Phase::LEVEL3_SPLASH || phase == Phase::LEVEL3_BRIEFING || phase == Phase::LEVEL3_POEM) return;
+
+    // Level 3 gargoyle arena: SPACE = instant attack on nearest gargoyle
+    if (phase == Phase::LEVEL3_GARGOYLE)
+    {
+        const int px = player.getX(), py = player.getY();
+        int bestDist = 999999, bestIdx = -1;
+        for (int i = 0; i < gargoyles.size(); ++i)
+        {
+            if (!gargoyles[i].alive) continue;
+            int d = abs(gargoyles[i].x - px) + abs(gargoyles[i].y - py);
+            if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        if (bestIdx >= 0)
+        {
+            gargoyles[bestIdx].hp--;
+            flashEvents.append({gargoyles[bestIdx].x, gargoyles[bestIdx].y, 20, "hit"});
+            player.addScore(10);
+            if (gargoyles[bestIdx].hp <= 0)
+            {
+                gargoyles[bestIdx].alive = false;
+                flashEvents.append({gargoyles[bestIdx].x, gargoyles[bestIdx].y, 30, "defeat"});
+                player.addScore(100);
+                storyMessages.prepend("Gargoyle destroyed!");
+                storyMsgTimer = 100;
+                bool allDead = true;
+                for (auto &g : gargoyles) if (g.alive) { allDead = false; break; }
+                if (allDead)
+                {
+                    phase = Phase::LEVEL3_POEM;
+                    storyMessages.clear();
+                    storyMessages.append("All gargoyles defeated! Study the poem and press Space...");
+                    storyMsgTimer = 200;
+                }
+            }
+        }
+        return;
+    }
 
     const int px   = player.getX();
     const int py   = player.getY();
@@ -566,29 +768,18 @@ void Game::updateEnemies()
         case EnemyType::SHADOW:
         {
             e->moveToward(px, py, staticWalkable);
-            if (e->getX() == px && e->getY() == py && damageCooldown == 0)
+            if (e->getX() == px && e->getY() == py)
             {
-                player.takeDamage(e->getAttackPower());
-                damageCooldown = 40;
+                // Instant kill — Level 1 is one-try, no HP
+                player.takeDamage(player.getHealth());
                 flashEvents.append({px, py, 25, "hit"});
+                storyMessages.prepend("The shadow caught you!");
+                storyMsgTimer = 100;
             }
             break;
         }
         case EnemyType::WITCH:
-        {
-            WitchEnemy *witch = static_cast<WitchEnemy*>(e);
-            if (!witch->isRiddleSolved() && phase == Phase::LEVEL2_COMBAT)
-            {
-                int dist = abs(e->getX() - px) + abs(e->getY() - py);
-                if (dist <= 3 && damageCooldown == 0)
-                {
-                    player.takeDamage(e->getAttackPower());
-                    damageCooldown = 50;
-                    flashEvents.append({px, py, 25, "hit"});
-                }
-            }
-            break;
-        }
+            break; // WitchEnemy not used in new Level 2
         case EnemyType::ARCHER:
         {
             ArcherEnemy *archer = static_cast<ArcherEnemy*>(e);
@@ -703,16 +894,7 @@ void Game::updateEnemies()
         }
         case EnemyType::PATROL:
         {
-            // e->moveToward(0, 0, staticWalkable); // PatrolEnemy ignores target
-            // if (e->getX() == px && e->getY() == py && damageCooldown == 0) {
-            //     player.takeDamage(e->getAttackPower());
-            //     damageCooldown = 40;
-            //     flashEvents.append({px, py, 25, "hit"});
-            //     storyMessages.prepend("A guard strikes you!");
-            //     storyMsgTimer = 100;
-            // }
-            // break;
-            e->moveToward(px, py, staticWalkable); // px,py used when chasing
+            e->moveToward(px, py, staticWalkable);
             if (e->getX() == px && e->getY() == py && damageCooldown == 0) {
                 player.takeDamage(e->getAttackPower());
                 damageCooldown = 40;
@@ -722,6 +904,32 @@ void Game::updateEnemies()
             }
             break;
         }
+        }
+    }
+
+    // Gargoyle movement (Level 3 arena, turn-based — one step per player move)
+    if (phase == Phase::LEVEL3_GARGOYLE)
+    {
+        for (auto &g : gargoyles)
+        {
+            if (!g.alive) continue;
+            int dx = 0, dy = 0;
+            if (g.x < px) dx = 1; else if (g.x > px) dx = -1;
+            if (g.y < py) dy = 1; else if (g.y > py) dy = -1;
+            // Prefer horizontal, then vertical
+            if (dx != 0 && level.isWalkable(g.x + dx, g.y))
+                g.x += dx;
+            else if (dy != 0 && level.isWalkable(g.x, g.y + dy))
+                g.y += dy;
+            // Gargoyle reaches player
+            if (g.x == px && g.y == py && damageCooldown == 0)
+            {
+                player.takeDamage(25);
+                damageCooldown = 20;
+                flashEvents.append({px, py, 25, "hit"});
+                storyMessages.prepend("A gargoyle claws you for 25 damage!");
+                storyMsgTimer = 120;
+            }
         }
     }
 }
@@ -775,26 +983,21 @@ bool Game::checkWin()
     case Phase::LEVEL1_EXPLORE:
         return level.map[player.getX()][player.getY()] == Level::COTTAGE;
 
-    case Phase::LEVEL2_RIDDLE:
+    case Phase::LEVEL2_CORRIDOR:
+        return false; // transition to witch room happens in movePlayer
+
+    case Phase::LEVEL2_WITCH_ROOM:
+        return witchScene && witchScene->escaped();
+
+    case Phase::LEVEL3_SPLASH:
+    case Phase::LEVEL3_BRIEFING:
+    case Phase::LEVEL3_GARGOYLE:
+    case Phase::LEVEL3_POEM:
         return false;
-    case Phase::LEVEL2_COMBAT:
-    {
-        bool witchDone = true;
-        for (auto *e : enemies)
-            if (e->getType() == EnemyType::WITCH && !e->isDefeated())
-            { witchDone = false; break; }
-        return witchDone && level.map[player.getX()][player.getY()] == Level::STAIRS;
-    }
-    case Phase::LEVEL3_INFILTRATE:
-    {
-        bool archersDone = true;
-        for (auto *e : enemies)
-            if (e->getType() == EnemyType::ARCHER && !e->isDefeated())
-            { archersDone = false; break; }
-        return archersDone && level.map[player.getX()][player.getY()] == Level::STAIRS;
-    }
-    // case Phase::LEVEL4_NAVIGATE:
-    //     return level.map[player.getX()][player.getY()] == Level::STAIRS;
+
+    case Phase::LEVEL3_CORRIDOR:
+        return leverGateOpen && level.map[player.getX()][player.getY()] == Level::DOOR;
+
     case Phase::LEVEL4_NAVIGATE:
         return player.getKeys() > 0 &&
                level.map[player.getX()][player.getY()] == Level::STAIRS;
@@ -813,84 +1016,87 @@ bool Game::checkLose()
 }
 
 // -------------------------------------------------------
-// Riddle system (Level 2 — implemented by partner)
+// Level 2 witch / Level 3 lever — new systems
 // -------------------------------------------------------
 
-struct Riddle { QString question; QVector<QString> choices; int correct; QString roleLore[4]; };
-
-static const Riddle RIDDLES[3] = {
-    {
-        "I speak without mouth, heard without ears,\nhave no body but come alive with wind.\nWhat am I?",
-        {"A ghost", "An echo", "A shadow", "A dream"}, 1,
-        {"Cast Echo Spell!", "Shield Bash — 'ECHO!'", "Shadow Step into silence", "Bless — 'Sacred Echo!'"}
-    },
-    {
-        "The more you take, the more you leave behind.\nWhat am I?",
-        {"Memories", "Footsteps", "Time", "Gold"}, 1,
-        {"Arcane Footstep!", "Warrior Stride!", "Rogue Sprint!", "Holy March!"}
-    },
-    {
-        "What has roots as nobody sees,\nis taller than trees, up up it goes\nand yet never grows?",
-        {"A mountain", "A tower", "A river", "A storm"}, 0,
-        {"Mountain Crush!", "Shield Wall!", "Vanish Strike!", "Earth Bless!"}
-    }
-};
-
-QString          Game::getRiddleQuestion()  const { return RIDDLES[riddleIndex].question; }
-QVector<QString> Game::getRiddleChoices()   const { return RIDDLES[riddleIndex].choices; }
-bool             Game::isRiddleActive()     const { return phase == Phase::LEVEL2_RIDDLE; }
-bool             Game::getRiddleCorrect()   const { return riddleCorrect; }
-int              Game::getRiddleAttempts()  const { return riddleAttempts; }
-
-void Game::answerRiddle(int choiceIndex)
+void Game::submitWitchAnswer(const QString &answer)
 {
-    riddleAttempts++;
-    if (choiceIndex == RIDDLES[riddleIndex].correct)
+    if (!witchScene) return;
+    witchScene->submitAnswer(answer);
+    if (witchScene->escaped())
     {
-        riddleCorrect  = true;
-        riddleAnswered = true;
-
-        int roleIdx = 0;
-        const QString role = player.getRole();
-        if (role == "Wizard")   roleIdx = 0;
-        else if (role == "Fighter") roleIdx = 1;
-        else if (role == "Rogue")   roleIdx = 2;
-        else if (role == "Cleric")  roleIdx = 3;
-
-        player.addItem("spell_" + QString::number(riddleIndex));
-        player.setAttackPower(player.getAttackPower() + 15);
-
-        storyMessages.clear();
-        storyMessages.append("Correct! You use the " +
-                             QString(RIDDLES[riddleIndex].roleLore[roleIdx]));
-        storyMessages.append("The witch is weakened! Attack or reach the stairs!");
-        storyMsgTimer = 220;
-
-        for (auto *e : enemies)
-            if (e->getType() == EnemyType::WITCH)
-            {
-                WitchEnemy *w = static_cast<WitchEnemy*>(e);
-                w->solveRiddle();
-                w->takeDamage(50);
-                break;
-            }
-        phase = Phase::LEVEL2_COMBAT;
+        player.addScore(200);
+        storyMessages.prepend("You solved the riddle! The witch releases you.");
+        storyMsgTimer = 180;
     }
     else
     {
-        riddleAnswered = false;
-        storyMessages.clear();
-        storyMessages.append("Wrong! The witch blasts you!");
-        storyMsgTimer = 140;
-        player.takeDamage(20);
         flashEvents.append({player.getX(), player.getY(), 25, "hit"});
-        if (riddleAttempts >= 3)
+        if (witchScene->wrongAttempts() >= 3)
         {
-            phase = Phase::LEVEL2_COMBAT;
-            storyMessages.prepend("Out of chances! Face her wrath!");
+            player.takeDamage(player.getHealth());
+            storyMessages.prepend("Three wrong answers! The witch's curse claims you!");
+            storyMsgTimer = 200;
+        }
+        else
+        {
+            player.takeDamage(25);
+            storyMessages.prepend(QString("Wrong! (%1/3) — think harder...").arg(witchScene->wrongAttempts()));
+            storyMsgTimer = 150;
         }
     }
 }
+
+void Game::advanceL3Phase()
+{
+    if      (phase == Phase::LEVEL3_SPLASH)   phase = Phase::LEVEL3_BRIEFING;
+    else if (phase == Phase::LEVEL3_BRIEFING) phase = Phase::LEVEL3_GARGOYLE;
+    else if (phase == Phase::LEVEL3_POEM)     buildLevel3Corridor();
+}
+
+void Game::pullLever(int leverIndex)
+{
+    const QVector<int> seq = correctLeverSequence(player.getRole());
+    if (leverIndex == seq[leverProgress])
+    {
+        leverLocked[leverIndex] = true;
+        leverProgress++;
+        if (leverProgress == 4)
+        {
+            leverGateOpen = true;
+            level.map[12][3] = Level::DOOR;
+            player.addScore(300);
+            storyMessages.prepend("★ All levers pulled! The gate opens — reach it! ★");
+            storyMsgTimer = 200;
+        }
+        else
+        {
+            storyMessages.prepend(QString("Correct! Step %1/4 — keep going!").arg(leverProgress));
+            storyMsgTimer = 120;
+        }
+    }
+    else
+    {
+        leverStrikes++;
+        leverProgress = 0;
+        for (int i = 0; i < 4; ++i) leverLocked[i] = false;
+        storyMessages.prepend(QString("WRONG LEVER! Strike %1/3!").arg(leverStrikes));
+        storyMsgTimer = 150;
+        if (leverStrikes >= 3)
+        {
+            player.takeDamage(player.getHealth());
+            storyMessages.prepend("Three strikes! The curse destroys you!");
+            storyMsgTimer = 200;
+        }
+    }
+}
+
+WitchScene*                Game::getWitchScene()    const { return witchScene; }
+const QVector<Gargoyle>&   Game::getGargoyles()     const { return gargoyles; }
+bool                       Game::isLeverLocked(int i) const { return (i>=0&&i<4)?leverLocked[i]:false; }
+bool                       Game::isLeverGateOpen()  const { return leverGateOpen; }
+int                        Game::getLeverProgress() const { return leverProgress; }
+int                        Game::getLeverStrikes()  const { return leverStrikes; }
 
 // -------------------------------------------------------
 // Potions
@@ -922,10 +1128,12 @@ void Game::reinit()
     megaFireWarningActive = false;
     damageCooldown  = 0;
     storyMsgTimer   = 0;
-    riddleIndex     = 0;
-    riddleAnswered  = false;
-    riddleCorrect   = false;
-    riddleAttempts  = 0;
+    delete witchScene; witchScene = nullptr;
+    gargoyles.clear();
+    leverProgress = 0;
+    leverStrikes  = 0;
+    for (int i = 0; i < 4; ++i) leverLocked[i] = false;
+    leverGateOpen = false;
     currentLevel    = 1;
     storyState      = 0;
     turns           = 0;
@@ -942,11 +1150,12 @@ void Game::restartCurrentLevel()
     switch (currentLevel)
     {
     case 1: buildLevel1(); break;
+    case 2: buildLevel2(); break;
+    case 3: buildLevel3(); break;
     case 4: buildLevel4(); break;
     case 5: buildLevel5(); break;
     default: buildLevel1(); break;
     }
-    // Full health restore so the restart is always fair
     player.heal(player.getMaxHealth());
 }
 // -------------------------------------------------------
@@ -956,15 +1165,12 @@ void Game::restartCurrentLevel()
 void Game::advanceToNextLevel()
 {
     player.addScore(500 * currentLevel);
-
-    // Skip levels 2 & 3 until partner implements them
-    if (currentLevel == 1)
-        currentLevel = 4;
-    else
-        currentLevel++;
+    currentLevel++;
 
     switch (currentLevel)
     {
+    case 2: buildLevel2(); break;
+    case 3: buildLevel3(); break;
     case 4: buildLevel4(); break;
     case 5: buildLevel5(); break;
     default:
@@ -1017,12 +1223,18 @@ QString Game::storyHint() const
         if (storyState == 0) return "Find the bridge and follow the lantern path to the cottage.";
         if (storyState == 1) return "You crossed the old bridge. The cottage lights glow ahead...";
         return "Final stretch! Reach the cottage before the shadow catches you!";
-    case Phase::LEVEL2_RIDDLE:
-        return "Answer the riddle correctly to weaken the witch!";
-    case Phase::LEVEL2_COMBAT:
-        return "Witch weakened! Attack (Space) and reach the stairs to continue.";
-    case Phase::LEVEL3_INFILTRATE:
-        return "Defeat all archers (Space), then reach the castle gate.";
+    case Phase::LEVEL2_CORRIDOR:
+        return "Navigate the corridor, avoid traps, reach the door on the right.";
+    case Phase::LEVEL2_WITCH_ROOM:
+        return "Answer the witch's riddle. Type your answer and press Enter.";
+    case Phase::LEVEL3_SPLASH:
+    case Phase::LEVEL3_BRIEFING:
+    case Phase::LEVEL3_POEM:
+        return "Press Space to continue...";
+    case Phase::LEVEL3_GARGOYLE:
+        return "Defeat all gargoyles! SPACE = attack nearest. Move to dodge!";
+    case Phase::LEVEL3_CORRIDOR:
+        return leverGateOpen ? "Gate is open! Reach it to escape!" : "Pull the 4 levers in the correct order from the poem.";
     // case Phase::LEVEL4_NAVIGATE:
     //     return "Find 4 keys, avoid traps, unlock 2 doors. Reach the dungeon stairs.";
     case Phase::LEVEL4_NAVIGATE:
@@ -1087,6 +1299,8 @@ void Game::loadSaveState(const SaveState &s)
     switch (currentLevel)
     {
     case 1: buildLevel1(); break;
+    case 2: buildLevel2(); break;
+    case 3: buildLevel3(); break;
     case 4: buildLevel4(); break;
     case 5: buildLevel5(); break;
     default: buildLevel1(); break;

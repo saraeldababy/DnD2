@@ -16,8 +16,8 @@ private:
     bool showIntroDialog;
     int introTimer;
 
-    // Riddle UI state
-    int riddleSelected; // currently highlighted choice
+    // Witch room text input
+    QString witchAnswerInput;
 
     // Animation timer
     QTimer *animTimer;
@@ -44,9 +44,18 @@ private:
     void drawProjectiles(QPainter &p, int ox, int oy, int tileSize);
     void drawHUD(QPainter &p);
     void drawFlashEvents(QPainter &p, int ox, int oy, int tileSize);
-    void drawRiddleDialog(QPainter &p);
     void drawStoryBanner(QPainter &p);
     void drawHealthBar(QPainter &p, int x, int y, int w, int h, int hp, int maxhp, QColor fill);
+
+    // Level 2 witch helpers
+    void drawWitch(QPainter &p, int cx, int cy);
+    void drawWitchPanel(QPainter &p);
+
+    // Level 3 helpers
+    void drawGargoyle(QPainter &p, const Gargoyle &g, int tileSize, int ox, int oy);
+    void drawL3Splash(QPainter &p);
+    void drawL3Briefing(QPainter &p);
+    void drawPoemClue(QPainter &p);
 
     QRect tileRect(int x, int y, int tileSize, int ox, int oy) const;
 

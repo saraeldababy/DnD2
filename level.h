@@ -23,7 +23,8 @@ public:
         STAIRS   = 12,
         FIRE     = 13,
         CELL     = 14,
-        SWORD_TILE = 15
+        SWORD_TILE = 15,
+        LEVER = 16
     };
 
     Level(int size = 10);

@@ -9,6 +9,14 @@
 #include "player.h"
 #include "enemy.h"
 #include "level.h"
+#include "witchscene.h"
+
+// Gargoyle (Level 3 arena enemy — grid-based, separate from Enemy system)
+struct Gargoyle {
+    int x, y;
+    int hp;
+    bool alive;
+};
 
 // Projectile (arrows, fireballs)
 struct Projectile {
@@ -30,12 +38,16 @@ class Game
 {
 public:
     enum class Phase {
-        LEVEL1_EXPLORE,       // Level 1: escape shadow
-        LEVEL2_RIDDLE,        // Level 2: riddle dialog
-        LEVEL2_COMBAT,        // Level 2: after riddle, fight or pass
-        LEVEL3_INFILTRATE,    // Level 3: castle exterior, shoot archers
-        LEVEL4_NAVIGATE,      // Level 4: castle interior, traps & keys
-        LEVEL5_DRAGON,        // Level 5: dragon boss fight
+        LEVEL1_EXPLORE,
+        LEVEL2_CORRIDOR,
+        LEVEL2_WITCH_ROOM,
+        LEVEL3_SPLASH,
+        LEVEL3_BRIEFING,
+        LEVEL3_GARGOYLE,
+        LEVEL3_POEM,
+        LEVEL3_CORRIDOR,
+        LEVEL4_NAVIGATE,
+        LEVEL5_DRAGON,
         VICTORY,
         DEAD
     };
@@ -53,13 +65,16 @@ private:
     int storyState;
     int turns;
 
-    // Level 2 riddle system
-    int riddleIndex;
-    bool riddleAnswered;
-    bool riddleCorrect;
-    int riddleAttempts;
+    // Level 2 witch scene
+    WitchScene *witchScene;
 
-    // Level 3
+    // Level 3 gargoyle arena & lever corridor
+    QVector<Gargoyle> gargoyles;
+    int leverProgress;
+    int leverStrikes;
+    bool leverLocked[4];
+    bool leverGateOpen;
+
     QVector<Projectile> projectiles;
 
     // Level 4
@@ -92,6 +107,7 @@ private:
     void buildLevel3();
     void buildLevel4();
     void buildLevel5();
+    void buildLevel3Corridor();
 
     void clearEnemies();
 
@@ -111,13 +127,18 @@ public:
     // Player attack (Space bar)
     void playerAttack();
 
-    // Riddle system
-    QString getRiddleQuestion() const;
-    QVector<QString> getRiddleChoices() const;
-    void answerRiddle(int choiceIndex);
-    bool isRiddleActive() const;
-    bool getRiddleCorrect() const;
-    int getRiddleAttempts() const;
+    // Level 2 witch
+    void submitWitchAnswer(const QString &answer);
+    WitchScene* getWitchScene() const;
+
+    // Level 3 gargoyle/lever
+    const QVector<Gargoyle>& getGargoyles() const;
+    bool isLeverLocked(int i) const;
+    bool isLeverGateOpen() const;
+    int  getLeverProgress() const;
+    int  getLeverStrikes()  const;
+    void advanceL3Phase();
+    void pullLever(int leverIndex);
 
     // Potion
     bool usePotion();

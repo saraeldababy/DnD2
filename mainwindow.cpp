@@ -33,11 +33,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(gameScreen, &GameView::gameLost, this, [this]() {
         int level = gameScreen->getGame().getCurrentLevel();
-        transitionLabel->setText(
-            "You have been defeated!\n\n"
-            "Level " + QString::number(level) + " restarting...");
+        int delay = 2000;
+        QString msg;
+        if (level == 1)
+        {
+            msg = "The shadow caught you!\n\nReturning to the forest...";
+            delay = 1500;
+        }
+        else
+        {
+            msg = "You have been defeated!\n\nLevel " + QString::number(level) + " restarting...";
+        }
+        transitionLabel->setText(msg);
         stack->setCurrentIndex(2);
-        QTimer::singleShot(2000, this, [this]() {
+        QTimer::singleShot(delay, this, [this]() {
             if (stack->currentIndex() == 2)
             {
                 gameScreen->clearLevel4Timers();
@@ -249,7 +258,21 @@ void MainWindow::showLevelTransition(int completedLevel)
               "You escaped the Whispering Forest!\n\n"
               "You learn that your friend Aldric is imprisoned\n"
               "in the dungeon beneath the great castle.\n\n"
-              "The castle interior lies ahead...";
+              "The Witch's Corridor lies ahead...";
+        break;
+    case 2:
+        msg = "Level 2 Complete!\n"
+              "You escaped the witch's curse!\n\n"
+              "The castle gates loom before you.\n"
+              "Ancient gargoyles stir in the shadows...\n\n"
+              "The Dragon's Castle awaits.";
+        break;
+    case 3:
+        msg = "Level 3 Complete!\n"
+              "You navigated the cursed corridor!\n\n"
+              "Beyond the gate lies the castle interior.\n"
+              "Guards patrol every hallway...\n\n"
+              "Stay hidden. Find the dungeon entrance.";
         break;
     case 4:
         msg = "Level 4 Complete!\n"

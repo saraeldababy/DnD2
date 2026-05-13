@@ -23,6 +23,7 @@ qt_add_executable(DungeonRealm
     enemy.h enemy.cpp
     level.h level.cpp
     game.h game.cpp
+    witchscene.h witchscene.cpp
     savemanager.h savemanager.cpp
 )
 

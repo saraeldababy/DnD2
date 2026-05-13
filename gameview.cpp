@@ -13,7 +13,7 @@
 GameView::GameView(QWidget *parent)
     : QWidget(parent), playerName("Adventurer"),
     showIntroDialog(true), introTimer(200),
-    riddleSelected(0), animFrame(0),
+    witchAnswerInput(), animFrame(0),
     trapHideTimer(nullptr), alarmCountdownTimer(nullptr),
     alarmSecondsLeft(0), l4AlarmTimerStarted(false)
 {
@@ -106,7 +106,7 @@ void GameView::drawHUD(QPainter &p)
     static const char *levelTitles[] = {
         "Level 1 — The Whispering Forest",
         "Level 2 — The Witch's Cottage",
-        "Level 3 — Castle Exterior",
+        "Level 3 — The Dragon's Castle",
         "Level 4 — Castle Interior",
         "Level 5 — The Dragon's Dungeon"
     };
@@ -121,17 +121,20 @@ void GameView::drawHUD(QPainter &p)
     p.setPen(QColor(200, 185, 155));
     p.drawText(14, 40, game.storyHint());
 
-    // Right side: health, potions, keys, score
+    // Right side: health (Levels 3+), potions, keys, score
     const int rX = W - 340;
     p.setPen(QColor(255, 100, 100));
     p.setFont(QFont("Georgia", 10, QFont::Bold));
     p.drawText(rX, 18, pl.getName() + " [" + pl.getRole() + "]");
-    drawHealthBar(p, rX, 22, 200, 14, pl.getHealth(), pl.getMaxHealth(),
-                  pl.getHealth() > 40 ? QColor(80, 200, 80) : QColor(220, 60, 60));
+
+    bool showHP = (game.getCurrentLevel() >= 3);
+    if (showHP)
+        drawHealthBar(p, rX, 22, 200, 14, pl.getHealth(), pl.getMaxHealth(),
+                      pl.getHealth() > 40 ? QColor(80, 200, 80) : QColor(220, 60, 60));
 
     p.setPen(QColor(200, 230, 255));
     p.setFont(QFont("Georgia", 9));
-    p.drawText(rX + 210, 32, QString("💊 %1  🗝 %2  ⭐ %3")
+    p.drawText(showHP ? rX + 210 : rX, 32, QString("💊 %1  🗝 %2  ⭐ %3")
                                  .arg(pl.getPotions()).arg(pl.getKeys()).arg(pl.getScore()));
 
     // Separator line
@@ -546,61 +549,6 @@ void GameView::drawProjectiles(QPainter &p, int ox, int oy, int tileSize)
 }
 
 // -------------------------------------------------------
-// Riddle dialog
-// -------------------------------------------------------
-
-void GameView::drawRiddleDialog(QPainter &p)
-{
-    if (!game.isRiddleActive()) return;
-
-    const int W = width(); const int H = height();
-    const int dw = 600, dh = 380;
-    const int dx = (W - dw) / 2, dy = (H - dh) / 2;
-
-    // Dark overlay
-    p.setBrush(QColor(0, 0, 0, 160));
-    p.setPen(Qt::NoPen);
-    p.drawRect(0, 52, W, H - 52);
-
-    // Dialog box
-    p.setBrush(QColor(28, 18, 42));
-    p.setPen(QPen(QColor(180, 120, 220), 2));
-    p.drawRoundedRect(dx, dy, dw, dh, 14, 14);
-
-    // Title
-    p.setPen(QColor(255, 200, 80));
-    p.setFont(QFont("Georgia", 16, QFont::Bold));
-    p.drawText(QRect(dx, dy + 16, dw, 30), Qt::AlignCenter, "Morgana's Riddle");
-
-    // Riddle text
-    p.setPen(QColor(235, 220, 195));
-    p.setFont(QFont("Georgia", 12));
-    p.drawText(QRect(dx + 30, dy + 56, dw - 60, 120),
-               Qt::AlignHCenter | Qt::TextWordWrap, game.getRiddleQuestion());
-
-    // Choices
-    QVector<QString> choices = game.getRiddleChoices();
-    for (int i = 0; i < choices.size(); ++i)
-    {
-        int cy = dy + 190 + i * 40;
-        bool sel = (i == riddleSelected);
-        p.setBrush(sel ? QColor(100, 60, 160) : QColor(50, 35, 70));
-        p.setPen(sel ? QPen(QColor(255, 200, 80), 2) : QPen(QColor(120, 90, 150), 1));
-        p.drawRoundedRect(dx + 60, cy, dw - 120, 32, 8, 8);
-        p.setPen(sel ? QColor(255, 220, 100) : QColor(200, 180, 220));
-        p.setFont(QFont("Georgia", 11, sel ? QFont::Bold : QFont::Normal));
-        p.drawText(QRect(dx + 70, cy, dw - 140, 32), Qt::AlignVCenter, choices[i]);
-    }
-
-    // Instructions
-    p.setPen(QColor(150, 130, 180));
-    p.setFont(QFont("Georgia", 9));
-    p.drawText(QRect(dx, dy + dh - 34, dw, 24), Qt::AlignCenter,
-               "↑↓ select  |  Enter to answer  |  Attempts left: " +
-                   QString::number(3 - game.getRiddleAttempts()));
-}
-
-// -------------------------------------------------------
 // Level-specific renderers
 // -------------------------------------------------------
 
@@ -698,15 +646,429 @@ void GameView::drawLevel1(QPainter &p, int tileSize, int ox, int oy)
     p.drawRect(cottageBase.right()-24, cottageBase.top()+16, 14, 12);
 }
 
+void GameView::drawWitch(QPainter &p, int cx, int cy)
+{
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(48, 18, 68));
+    QPoint robe[5] = {{cx-36,cy+130},{cx+36,cy+130},{cx+28,cy+50},{cx,cy+40},{cx-28,cy+50}};
+    p.drawPolygon(robe, 5);
+    p.setBrush(QColor(55, 22, 78));
+    p.drawRoundedRect(cx-22, cy+40, 44, 70, 10, 10);
+    p.setBrush(QColor(176, 148, 110));
+    p.drawEllipse(cx-18, cy, 36, 40);
+    p.setBrush(QColor(22, 14, 32));
+    p.drawEllipse(cx-28, cy+2, 56, 14);
+    QPoint hat[3] = {{cx-22,cy+8},{cx+22,cy+8},{cx+4,cy-52}};
+    p.setBrush(QColor(28, 16, 40));
+    p.drawPolygon(hat, 3);
+    p.setBrush(QColor(120, 50, 160));
+    p.drawRect(cx-20, cy+2, 40, 8);
+    p.setBrush(QColor(60, 220, 80));
+    p.drawEllipse(cx-10, cy+14, 8, 8);
+    p.drawEllipse(cx+2,  cy+14, 8, 8);
+    p.setBrush(QColor(10, 60, 16));
+    p.drawEllipse(cx-8, cy+16, 4, 4);
+    p.drawEllipse(cx+4, cy+16, 4, 4);
+    p.setPen(QPen(QColor(120, 90, 60), 2));
+    p.drawLine(cx, cy+22, cx-4, cy+30);
+    p.drawLine(cx-4, cy+30, cx+2, cy+32);
+    p.setPen(QPen(QColor(80, 55, 30), 3));
+    p.drawLine(cx+26, cy+110, cx+42, cy-40);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(140, 60, 200, 200));
+    p.drawEllipse(cx+36, cy-52, 18, 18);
+    QRadialGradient og(cx+45, cy-43, 20);
+    og.setColorAt(0.0, QColor(180, 100, 255, 120));
+    og.setColorAt(1.0, QColor(0, 0, 0, 0));
+    p.fillRect(cx+24, cy-64, 44, 44, og);
+}
+
+void GameView::drawWitchPanel(QPainter &p)
+{
+    const WitchScene *ws = game.getWitchScene();
+    if (!ws) return;
+    WitchScene::Phase wph = ws->phase();
+
+    QLinearGradient panelBg(0, 460, 0, height());
+    panelBg.setColorAt(0.0, QColor(20, 10, 30, 230));
+    panelBg.setColorAt(1.0, QColor(10,  5, 15, 240));
+    p.fillRect(QRect(0, 460, width(), height() - 460), panelBg);
+    p.setPen(QPen(QColor(100, 60, 140), 1));
+    p.drawLine(0, 461, width(), 461);
+
+    p.setFont(QFont("Georgia", 10, QFont::Bold));
+    p.setPen(QColor(190, 130, 230));
+    p.drawText(16, 480, "The Witch:");
+    p.setFont(QFont("Georgia", 11, QFont::StyleItalic));
+    p.setPen(QColor(232, 210, 255));
+    p.drawText(QRect(16, 484, 560, 60), Qt::TextWordWrap, ws->witchLine());
+
+    if (wph == WitchScene::PHASE_RIDDLE || wph == WitchScene::PHASE_WRONG)
+    {
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(60, 38, 18, 220));
+        p.drawRoundedRect(10, 100, width()-20, 345, 12, 12);
+        p.setPen(QPen(QColor(160, 110, 60), 1));
+        p.drawRoundedRect(10, 100, width()-20, 345, 12, 12);
+
+        p.setFont(QFont("Georgia", 13, QFont::Bold));
+        p.setPen(QColor(230, 190, 100));
+        p.drawText(QRect(30, 112, width()-60, 30), Qt::AlignHCenter, "~ The Witch's Riddle ~");
+
+        p.setFont(QFont("Georgia", 12));
+        p.setPen(QColor(242, 224, 178));
+        p.drawText(QRect(40, 148, width()-80, 180), Qt::AlignHCenter | Qt::TextWordWrap, ws->riddleText());
+
+        p.setFont(QFont("Georgia", 10, QFont::StyleItalic));
+        p.setPen(QColor(160, 130, 90));
+        p.drawText(QRect(40, 340, width()-80, 30), Qt::AlignHCenter, ws->hintText());
+
+        if (wph == WitchScene::PHASE_WRONG)
+        {
+            p.setFont(QFont("Georgia", 10, QFont::Bold));
+            p.setPen(QColor(220, 80, 60));
+            p.drawText(QRect(40, 374, width()-80, 24), Qt::AlignHCenter,
+                       QString("Wrong! (%1/3) — type your answer below").arg(ws->wrongAttempts()));
+        }
+
+        // Typed answer display
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(20, 15, 35));
+        p.drawRoundedRect(width()/2 - 200, 408, 400, 30, 6, 6);
+        p.setPen(QPen(QColor(120, 80, 180), 1));
+        p.drawRoundedRect(width()/2 - 200, 408, 400, 30, 6, 6);
+        p.setFont(QFont("Georgia", 12));
+        p.setPen(QColor(240, 220, 255));
+        p.drawText(QRect(width()/2 - 190, 411, 380, 24), Qt::AlignVCenter,
+                   "> " + witchAnswerInput + "|");
+    }
+    else if (wph == WitchScene::PHASE_TAUNT || wph == WitchScene::PHASE_ENTER)
+    {
+        p.setFont(QFont("Georgia", 10, QFont::Bold));
+        p.setPen(QColor(220, 180, 80));
+        p.drawText(QRect(0, height()-30, width(), 24), Qt::AlignCenter,
+                   wph == WitchScene::PHASE_TAUNT
+                       ? "Press Space to face the riddle..."
+                       : "Press Space to continue...");
+    }
+}
+
 void GameView::drawLevel2(QPainter &p, int tileSize, int ox, int oy)
 {
     Level &lv = game.getLevel();
+    Game::Phase phase = game.getPhase();
 
-    // Warm candlelit interior
+    if (phase == Game::Phase::LEVEL2_CORRIDOR)
+    {
+        QLinearGradient bg(0, 52, 0, height());
+        bg.setColorAt(0, QColor(15, 10, 5));
+        bg.setColorAt(1, QColor(25, 16, 8));
+        p.fillRect(0, 52, width(), height()-52, bg);
+
+        for (int x = 0; x < lv.gridSize; ++x)
+            for (int y = 0; y < lv.gridSize; ++y)
+            {
+                QRect tile = tileRect(x, y, tileSize, ox, oy);
+                int kind = lv.map[x][y];
+
+                if (kind == Level::WALL)
+                {
+                    p.setBrush(QColor(55, 42, 30));
+                    p.setPen(QPen(QColor(35, 26, 16), 1));
+                    p.drawRect(tile);
+                    p.setBrush(QColor(65, 50, 36));
+                    p.drawRoundedRect(tile.adjusted(4, 4, -4, -4), 3, 3);
+                }
+                else if (kind == Level::FLOOR)
+                {
+                    p.setBrush((x+y)%2==0 ? QColor(62,50,38) : QColor(55,44,32));
+                    p.setPen(QPen(QColor(40, 30, 20), 1));
+                    p.drawRect(tile);
+                }
+                else if (kind == Level::CHEST)
+                {
+                    p.setBrush((x+y)%2==0 ? QColor(62,50,38) : QColor(55,44,32));
+                    p.setPen(QPen(QColor(40, 30, 20), 1));
+                    p.drawRect(tile);
+                    p.setBrush(QColor(120, 80, 30));
+                    p.setPen(QPen(QColor(80, 50, 15), 2));
+                    p.drawRoundedRect(tile.adjusted(10, 18, -10, -10), 5, 5);
+                    p.setBrush(QColor(150, 100, 40));
+                    p.drawRoundedRect(tile.adjusted(10, 12, -10, -28), 5, 5);
+                    p.setBrush(QColor(220, 180, 60));
+                    p.setPen(Qt::NoPen);
+                    p.drawEllipse(tile.center().x()-4, tile.top()+22, 8, 8);
+                    QRadialGradient cg(tile.center(), 28);
+                    cg.setColorAt(0.0, QColor(220,180,60,80));
+                    cg.setColorAt(1.0, QColor(0,0,0,0));
+                    p.fillRect(tile, cg);
+                }
+                else if (kind == Level::DOOR)
+                {
+                    p.setBrush(QColor(55, 42, 30));
+                    p.setPen(QPen(QColor(35, 26, 16), 1));
+                    p.drawRect(tile);
+                    p.setBrush(QColor(90, 60, 35));
+                    p.setPen(QPen(QColor(60, 40, 20), 2));
+                    p.drawRoundedRect(tile.adjusted(8, 6, -8, -2), 6, 6);
+                    p.setBrush(QColor(200, 160, 50));
+                    p.setPen(Qt::NoPen);
+                    p.drawEllipse(tile.center().x()-5, tile.center().y()-5, 10, 10);
+                    p.setBrush(QColor(180, 140, 40));
+                    p.drawRect(tile.center().x()-3, tile.center().y(), 6, 8);
+                }
+            }
+
+        // Torch lights
+        for (int i : {2, 6})
+        {
+            int tx = ox + i*tileSize + tileSize/2;
+            int ty = oy + tileSize/3;
+            p.setPen(QPen(QColor(80, 55, 30), 2));
+            p.drawLine(tx, ty, tx, ty+12);
+            int fl = 5 + (int)(2*sin(animFrame*0.25 + i));
+            QRadialGradient flame(tx, ty, fl+4);
+            flame.setColorAt(0, QColor(255, 200, 60, 230));
+            flame.setColorAt(1, QColor(255, 60, 0, 0));
+            p.setBrush(flame);
+            p.setPen(Qt::NoPen);
+            p.drawEllipse(tx-fl, ty-fl, fl*2, fl*2);
+        }
+    }
+    else // LEVEL2_WITCH_ROOM
+    {
+        QLinearGradient bg(0, 52, 0, height());
+        bg.setColorAt(0.0, QColor(18, 10, 6));
+        bg.setColorAt(0.4, QColor(42, 22, 12));
+        bg.setColorAt(1.0, QColor(30, 14, 6));
+        p.fillRect(0, 52, width(), height()-52, bg);
+
+        // Stone floor tiles at bottom
+        p.setPen(Qt::NoPen);
+        for (int col = 0; col < 10; ++col)
+            for (int row = 0; row < 3; ++row)
+            {
+                p.setBrush((col+row)%2==0 ? QColor(62,50,40) : QColor(55,44,34));
+                p.drawRoundedRect(col*82 + (row%2)*41, 430+row*34, 80, 32, 4, 4);
+            }
+
+        // Fireplace / cauldron
+        p.setBrush(QColor(60, 42, 28));
+        p.drawRect(580, 220, 180, 210);
+        p.setBrush(QColor(15, 8, 4));
+        p.drawRoundedRect(608, 280, 124, 150, 10, 10);
+        p.setBrush(QColor(200, 80, 10, 220)); p.drawEllipse(618, 310, 40, 90);
+        p.setBrush(QColor(230, 130, 20, 200)); p.drawEllipse(638, 295, 50, 110);
+        p.setBrush(QColor(255, 200, 60, 180)); p.drawEllipse(645, 285, 30, 70);
+        QRadialGradient fg(700, 360, 200);
+        fg.setColorAt(0.0, QColor(220, 110, 20, 70));
+        fg.setColorAt(1.0, QColor(0, 0, 0, 0));
+        p.fillRect(rect(), fg);
+
+        // Bookshelves
+        for (int shelf = 0; shelf < 2; ++shelf)
+        {
+            int sy = 130 + shelf*110;
+            p.setBrush(QColor(72, 50, 32));
+            p.drawRoundedRect(20, sy, 160, 12, 3, 3);
+            const QColor bc[] = {QColor(100,20,140),QColor(20,100,60),QColor(160,80,10),QColor(40,80,160)};
+            for (int b = 0; b < 4; ++b)
+            {
+                int bx = 28+b*38, by = sy-46;
+                p.setBrush(bc[b]); p.drawRoundedRect(bx, by+14, 18, 32, 5, 5);
+                p.setBrush(QColor(80, 65, 52)); p.drawRoundedRect(bx+5, by, 8, 16, 3, 3);
+            }
+        }
+
+        // Witch and player
+        drawWitch(p, 300, 220);
+        drawWitchPanel(p);
+    }
+    Q_UNUSED(tileSize); Q_UNUSED(ox); Q_UNUSED(oy);
+}
+
+void GameView::drawGargoyle(QPainter &p, const Gargoyle &g, int tileSize, int ox, int oy)
+{
+    int gx = ox + g.x * tileSize;
+    int gy = oy + g.y * tileSize;
+    int bob = (int)(2 * sin(animFrame * 0.15 + g.x));
+
+    p.setPen(Qt::NoPen);
+    // Wings
+    p.setBrush(QColor(60, 55, 50));
+    QPoint wingL[4] = {
+        QPoint(gx+8,  gy+16+bob), QPoint(gx-10, gy+8+bob),
+        QPoint(gx-4,  gy+30+bob), QPoint(gx+8,  gy+28+bob)
+    };
+    QPoint wingR[4] = {
+        QPoint(gx+36, gy+16+bob), QPoint(gx+54, gy+8+bob),
+        QPoint(gx+48, gy+30+bob), QPoint(gx+36, gy+28+bob)
+    };
+    p.drawPolygon(wingL, 4);
+    p.drawPolygon(wingR, 4);
+    // Body
+    p.setBrush(QColor(90, 82, 72));
+    p.drawEllipse(gx+8, gy+14+bob, 28, 22);
+    // Head
+    p.setBrush(QColor(100, 92, 82));
+    p.drawEllipse(gx+14, gy+4+bob, 16, 16);
+    // Horns
+    p.setPen(QPen(QColor(60, 50, 40), 2));
+    p.drawLine(gx+16, gy+4+bob,  gx+13, gy-5+bob);
+    p.drawLine(gx+28, gy+4+bob,  gx+31, gy-5+bob);
+    // Eyes
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(255, 60, 0));
+    p.drawEllipse(gx+17, gy+9+bob, 4, 4);
+    p.drawEllipse(gx+24, gy+9+bob, 4, 4);
+    // HP bar
+    drawHealthBar(p, gx, gy-12, tileSize, 7, g.hp, 3, QColor(160, 60, 200));
+}
+
+void GameView::drawL3Splash(QPainter &p)
+{
+    const int W = width(), H = height();
+    QLinearGradient bg(0, 0, 0, H);
+    bg.setColorAt(0.0, QColor(10, 5, 20));
+    bg.setColorAt(0.5, QColor(30, 15, 40));
+    bg.setColorAt(1.0, QColor(10, 5, 20));
+    p.fillRect(rect(), bg);
+
+    p.setFont(QFont("Georgia", 36, QFont::Bold));
+    p.setPen(QColor(200, 160, 255));
+    p.drawText(QRect(0, H/2-80, W, 60), Qt::AlignCenter, "Level 3");
+    p.setFont(QFont("Georgia", 22, QFont::Bold));
+    p.setPen(QColor(255, 200, 100));
+    p.drawText(QRect(0, H/2-18, W, 40), Qt::AlignCenter, "The Dragon's Castle");
+    p.setFont(QFont("Georgia", 12));
+    p.setPen(QColor(180, 160, 220));
+    p.drawText(QRect(0, H/2+44, W, 30), Qt::AlignCenter, "Press Space to continue...");
+}
+
+void GameView::drawL3Briefing(QPainter &p)
+{
+    const int W = width(), H = height();
+    QLinearGradient bg(0, 0, 0, H);
+    bg.setColorAt(0.0, QColor(8, 4, 18));
+    bg.setColorAt(1.0, QColor(20, 10, 30));
+    p.fillRect(rect(), bg);
+
+    drawWitch(p, 120, 160);
+
+    p.setBrush(QColor(28, 18, 45, 220));
+    p.setPen(QPen(QColor(140, 100, 180), 2));
+    p.drawRoundedRect(210, 80, W-240, 300, 12, 12);
+    p.setFont(QFont("Georgia", 13, QFont::Bold));
+    p.setPen(QColor(240, 210, 255));
+    p.drawText(QRect(230, 95, W-280, 30), Qt::AlignCenter, "The Witch Speaks:");
+    p.setFont(QFont("Georgia", 11, QFont::StyleItalic));
+    p.setPen(QColor(220, 200, 240));
+    p.drawText(QRect(230, 135, W-280, 230), Qt::AlignVCenter | Qt::TextWordWrap,
+               "\"Beyond this passage stand the Stone Gargoyles — ancient guardians of the castle.\n\n"
+               "Defeat them all with [Space] to earn the poem that reveals the lever order.\n\n"
+               "Four levers wait in the corridor. Pull them in the right order or the walls will crush you.\n\n"
+               "Three wrong pulls... and it ends.\"");
+    p.setFont(QFont("Georgia", 10));
+    p.setPen(QColor(160, 130, 200));
+    p.drawText(QRect(0, H-40, W, 30), Qt::AlignCenter, "Press Space to enter...");
+}
+
+void GameView::drawPoemClue(QPainter &p)
+{
+    const int W = width(), H = height();
+    const QString role = game.getPlayer().getRole();
+
+    QLinearGradient bg(0, 0, 0, H);
+    bg.setColorAt(0.0, QColor(8, 4, 18));
+    bg.setColorAt(1.0, QColor(20, 10, 30));
+    p.fillRect(rect(), bg);
+
+    // Parchment background
+    p.setBrush(QColor(60, 45, 25, 230));
+    p.setPen(QPen(QColor(160, 130, 70), 2));
+    p.drawRoundedRect(W/2-270, 54, 540, 500, 14, 14);
+
+    p.setFont(QFont("Georgia", 15, QFont::Bold));
+    p.setPen(QColor(255, 220, 100));
+    p.drawText(QRect(W/2-260, 68, 520, 30), Qt::AlignCenter, "~ The Lever Poem ~");
+
+    // Role-specific poem and order
+    struct PoemData { QString role, verse, order; };
+    // Sequences: Wizard={1,3,0,2}=☽✝★⚡  Fighter={2,0,3,1}=⚡★✝☽
+    //            Rogue={3,2,1,0}=✝⚡☽★   Cleric={0,1,2,3}=★☽⚡✝
+    static const PoemData poems[] = {
+        {"Wizard",
+         "First the Moon in silver light,\n"
+         "Then the Cross that stands through night,\n"
+         "Third the Star that guides the way,\n"
+         "Last the Storm to end the day.",
+         "☽  ✝  ★  ⚡"},
+        {"Fighter",
+         "First the Storm that splits the sky,\n"
+         "Then the Star shines bright and high,\n"
+         "Third the Cross stands without yield,\n"
+         "Last the Moon — the night is sealed.",
+         "⚡  ★  ✝  ☽"},
+        {"Rogue",
+         "The Cross is first when shadows fall,\n"
+         "The Storm comes next to shake the hall,\n"
+         "The Moon retreats to let you pass,\n"
+         "The Star shines last through broken glass.",
+         "✝  ⚡  ☽  ★"},
+        {"Cleric",
+         "The Star is first, as faith decrees,\n"
+         "The Moon comes next on gentle breeze,\n"
+         "The Storm is third in holy rite,\n"
+         "The Cross concludes and fades from sight.",
+         "★  ☽  ⚡  ✝"}
+    };
+
+    QString verse = poems[3].verse, order = poems[3].order;
+    for (const auto &pd : poems)
+        if (pd.role == role) { verse = pd.verse; order = pd.order; break; }
+
+    p.setFont(QFont("Georgia", 12, QFont::StyleItalic));
+    p.setPen(QColor(240, 220, 180));
+    p.drawText(QRect(W/2-240, 108, 480, 240), Qt::AlignHCenter | Qt::TextWordWrap, verse);
+
+    // Order box
+    p.setBrush(QColor(40, 30, 15, 190));
+    p.setPen(QPen(QColor(120, 100, 50), 1));
+    p.drawRoundedRect(W/2-210, 360, 420, 100, 8, 8);
+    p.setFont(QFont("Georgia", 18, QFont::Bold));
+    p.setPen(QColor(255, 220, 80));
+    p.drawText(QRect(W/2-200, 368, 400, 40), Qt::AlignCenter, order);
+    p.setFont(QFont("Georgia", 9));
+    p.setPen(QColor(180, 155, 100));
+    p.drawText(QRect(W/2-200, 408, 400, 42), Qt::AlignCenter | Qt::TextWordWrap,
+               "★ = North-West lever   ☽ = South-West lever\n"
+               "⚡ = South-East lever   ✝ = North-East lever");
+
+    p.setFont(QFont("Georgia", 10));
+    p.setPen(QColor(160, 130, 200));
+    p.drawText(QRect(0, H-40, W, 30), Qt::AlignCenter, "Press Space to enter the corridor...");
+}
+
+void GameView::drawLevel3(QPainter &p, int tileSize, int ox, int oy)
+{
+    Game::Phase phase = game.getPhase();
+
+    // Full-screen overlay phases — skip tile drawing entirely
+    if (phase == Game::Phase::LEVEL3_SPLASH)   { drawL3Splash(p);   return; }
+    if (phase == Game::Phase::LEVEL3_BRIEFING) { drawL3Briefing(p); return; }
+    if (phase == Game::Phase::LEVEL3_POEM)     { drawPoemClue(p);   return; }
+
+    Level &lv = game.getLevel();
+
     QLinearGradient bg(0, 52, 0, height());
-    bg.setColorAt(0, QColor(45, 25, 15));
-    bg.setColorAt(1, QColor(25, 12, 8));
+    bg.setColorAt(0.0, QColor(18, 8, 35));
+    bg.setColorAt(0.5, QColor(38, 18, 48));
+    bg.setColorAt(1.0, QColor(14, 6, 22));
     p.fillRect(0, 52, width(), height()-52, bg);
+
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(48, 42, 35));
+    p.drawRect(ox-8, oy-8, lv.gridSize*tileSize+16, lv.gridSize*tileSize+16);
 
     for (int x = 0; x < lv.gridSize; ++x)
         for (int y = 0; y < lv.gridSize; ++y)
@@ -716,175 +1078,119 @@ void GameView::drawLevel2(QPainter &p, int tileSize, int ox, int oy)
 
             if (kind == Level::FLOOR)
             {
-                // Stone floor pattern
-                p.setBrush(QColor(70 + (x+y)%2*10, 55 + (x+y)%2*8, 40));
-                p.setPen(QPen(QColor(50,38,28), 1));
+                p.setBrush((x+y)%2==0 ? QColor(55, 48, 40) : QColor(48, 42, 35));
+                p.setPen(QPen(QColor(35, 28, 22), 1));
                 p.drawRect(tile);
             }
             else if (kind == Level::WALL)
             {
-                p.setBrush(QColor(90, 70, 55));
+                p.setBrush(QColor(82, 74, 64));
                 p.setPen(Qt::NoPen);
                 p.drawRect(tile);
-                // Stone texture
-                p.setBrush(QColor(75, 58, 44));
-                p.drawRect(tile.adjusted(2,2,-2,-6));
+                p.setBrush(QColor(68, 60, 52));
+                p.drawRect(tile.adjusted(2, 2, -2, -tileSize/2));
+            }
+            else if (kind == Level::LOCKED)
+            {
+                p.setBrush(QColor(70, 35, 15));
+                p.setPen(QPen(QColor(180, 110, 30), 2));
+                p.drawRect(tile);
+                p.setBrush(QColor(180, 120, 40));
+                p.setPen(Qt::NoPen);
+                p.drawRoundedRect(tile.center().x()-6, tile.center().y()-1, 12, 10, 3, 3);
+                p.setBrush(Qt::NoBrush);
+                p.setPen(QPen(QColor(180, 120, 40), 2));
+                p.drawArc(tile.center().x()-5, tile.center().y()-8, 10, 10, 0, 180*16);
+                p.setPen(Qt::NoPen);
             }
             else if (kind == Level::DOOR)
             {
-                p.setBrush(QColor(110, 75, 45));
+                // Exit — green glow
+                p.setBrush(QColor(30, 120, 50));
                 p.setPen(Qt::NoPen);
                 p.drawRect(tile);
-                p.setBrush(QColor(180, 140, 80));
-                p.drawEllipse(tile.center().x()-3, tile.center().y()-3, 6, 6);
+                int gl = 8 + (int)(4*sin(animFrame*0.18));
+                p.setBrush(QColor(80, 255, 120, 100));
+                p.drawEllipse(tile.center().x()-gl, tile.center().y()-gl, gl*2, gl*2);
             }
-            else if (kind == Level::CHEST)
+            else if (kind == Level::LEVER)
             {
-                p.setBrush(QColor(120, 80, 40));
-                p.setPen(QPen(QColor(200, 160, 60), 1));
-                p.drawRoundedRect(tile.adjusted(4,8,-4,-8), 4, 4);
-                p.setBrush(QColor(200, 160, 60));
-                p.drawRect(tile.adjusted(8,12,-8,4));
-            }
-            else if (kind == Level::STAIRS)
-            {
-                p.setBrush(QColor(60, 80, 110));
-                p.setPen(Qt::NoPen);
+                p.setBrush((x+y)%2==0 ? QColor(55, 48, 40) : QColor(48, 42, 35));
+                p.setPen(QPen(QColor(35, 28, 22), 1));
                 p.drawRect(tile);
-                // Draw stairs symbol
-                p.setPen(QPen(QColor(120, 160, 200), 2));
-                for (int s = 0; s < 4; ++s)
-                    p.drawLine(tile.left()+4+s*6, tile.bottom()-4-s*6,
-                               tile.right()-4, tile.bottom()-4-s*6);
+                // Determine lever index to show pulled state
+                int idx = -1;
+                if (x==1  && y==1) idx=0;
+                else if (x==1  && y==5) idx=1;
+                else if (x==11 && y==5) idx=2;
+                else if (x==11 && y==1) idx=3;
+                bool pulled = (idx >= 0 && game.isLeverLocked(idx));
+                QColor leverCol = pulled ? QColor(60, 200, 80) : QColor(200, 160, 50);
+                p.setBrush(QColor(90, 70, 40));
+                p.setPen(Qt::NoPen);
+                p.drawRoundedRect(tile.center().x()-7, tile.center().y()+5, 14, 8, 3, 3);
+                p.setPen(QPen(leverCol, 3));
+                int lx = tile.center().x(), ly = tile.center().y()+8;
+                if (pulled) p.drawLine(lx, ly, lx+8, ly-10);
+                else        p.drawLine(lx, ly, lx-8, ly-10);
+                p.setPen(Qt::NoPen);
+                // Glyph label
+                const char *glyphs[] = {"★", "☽", "⚡", "✝"};
+                if (idx >= 0)
+                {
+                    p.setFont(QFont("Georgia", 8));
+                    p.setPen(leverCol);
+                    p.drawText(tile.adjusted(0, 0, 0, -tileSize/2+2), Qt::AlignCenter, glyphs[idx]);
+                    p.setPen(Qt::NoPen);
+                }
             }
         }
 
-    // Candles on shelves
-    const QPoint candles[] = {{2,2},{9,2},{9,8}};
-    for (auto &c : candles)
+    // Torches
+    const QPoint torchTiles[] = {{3,0},{7,0},{3,6},{7,6}};
+    for (auto &t : torchTiles)
     {
-        int cx = ox+c.x()*tileSize+tileSize/2;
-        int cy = oy+c.y()*tileSize+tileSize/3;
-        p.setPen(Qt::NoPen);
-        p.setBrush(QColor(230,220,200));
-        p.drawRoundedRect(cx-3, cy, 6, 14, 2, 2);
-        // Flame flicker
-        int fl = 5 + (int)(2*sin(animFrame*0.3+c.x()));
-        QRadialGradient flame(cx, cy-fl, fl);
-        flame.setColorAt(0, QColor(255,220,80,240));
-        flame.setColorAt(1, QColor(255,100,0,0));
-        p.setBrush(flame);
-        p.drawEllipse(cx-fl, cy-fl*2, fl*2, fl*2);
-    }
-}
-
-void GameView::drawLevel3(QPainter &p, int tileSize, int ox, int oy)
-{
-    Level &lv = game.getLevel();
-
-    // Dramatic twilight sky
-    QLinearGradient sky(0,52,0,height());
-    sky.setColorAt(0, QColor(20,10,40));
-    sky.setColorAt(0.4, QColor(80,30,80));
-    sky.setColorAt(1, QColor(40,20,10));
-    p.fillRect(0, 52, width(), height()-52, sky);
-
-    // Ground base
-    p.setPen(Qt::NoPen);
-    p.setBrush(QColor(50,45,35));
-    p.drawRect(ox-10, oy-10, lv.gridSize*tileSize+20, lv.gridSize*tileSize+20);
-
-    for (int x = 0; x < lv.gridSize; ++x)
-        for (int y = 0; y < lv.gridSize; ++y)
-        {
-            QRect tile = tileRect(x, y, tileSize, ox, oy);
-            int kind = lv.map[x][y];
-
-            if (kind == Level::GRASS)
-            {
-                p.setBrush(QColor(45 + (x+y)%3*5, 55, 30));
-                p.setPen(Qt::NoPen);
-                p.drawRect(tile);
-            }
-            else if (kind == Level::WALL)
-            {
-                // Castle stone wall
-                p.setBrush(QColor(85, 78, 68));
-                p.setPen(Qt::NoPen);
-                p.drawRect(tile);
-                p.setBrush(QColor(70, 64, 56));
-                for (int s = 0; s < 3; ++s)
-                    p.drawRect(tile.adjusted(1+s*14, 1, -(tileSize-14-s*14), -tileSize+10));
-            }
-            else if (kind == Level::TREE)
-            {
-                p.setBrush(QColor(30, 50, 25));
-                p.drawEllipse(tile.adjusted(6,4,-6,-16));
-                p.setBrush(QColor(70, 50, 30));
-                p.drawRoundedRect(tile.x()+tile.width()/2-4, tile.y()+tile.height()/2, 8, 18, 3, 3);
-            }
-            else if (kind == Level::PATH)
-            {
-                p.setBrush(QColor(110, 95, 70));
-                p.setPen(Qt::NoPen);
-                p.drawRect(tile);
-            }
-            else if (kind == Level::STAIRS)
-            {
-                // Castle gate entrance
-                p.setBrush(QColor(40, 30, 20));
-                p.setPen(QPen(QColor(120,90,60), 2));
-                p.drawRect(tile);
-                p.setPen(Qt::NoPen);
-                p.setBrush(QColor(200, 160, 80, 150));
-                p.drawEllipse(tile.adjusted(4, 2, -4, -4));
-                // Portcullis bars
-                p.setPen(QPen(QColor(80,80,80), 2));
-                for (int b = 0; b < 3; ++b)
-                    p.drawLine(tile.left()+8+b*12, tile.top()+4, tile.left()+8+b*12, tile.bottom()-4);
-                p.setPen(Qt::NoPen);
-            }
-        }
-
-    // Castle battlements decoration at top
-    for (int x = 4; x <= 13; ++x)
-    {
-        int bx = ox + x*tileSize;
-        int by = oy - 12;
-        if (x%2==0)
-        {
-            p.setBrush(QColor(85, 78, 68));
-            p.setPen(Qt::NoPen);
-            p.drawRect(bx+2, by, tileSize-4, 14);
-        }
-    }
-
-    // Torches on wall
-    for (int wx = 5; wx <= 12; wx += 3)
-    {
-        int tx = ox + wx*tileSize + tileSize/2;
-        int ty = oy + 2*tileSize + 8;
-        p.setPen(QPen(QColor(80,60,30), 2));
-        p.drawLine(tx, ty, tx, ty+14);
-        int fl = 5 + (int)(2*sin(animFrame*0.25+wx));
+        int tx = ox + t.x()*tileSize + tileSize/2;
+        int ty = oy + t.y()*tileSize + tileSize/2;
+        p.setPen(QPen(QColor(80, 58, 28), 2));
+        p.drawLine(tx, ty, tx, ty+12);
+        int fl = 5 + (int)(2*sin(animFrame*0.25+t.x()));
         QRadialGradient flame(tx, ty, fl+4);
-        flame.setColorAt(0, QColor(255,200,60,230));
-        flame.setColorAt(1, QColor(255,60,0,0));
+        flame.setColorAt(0, QColor(255, 200, 60, 230));
+        flame.setColorAt(1, QColor(255, 60, 0, 0));
         p.setBrush(flame); p.setPen(Qt::NoPen);
         p.drawEllipse(tx-fl, ty-fl, fl*2, fl*2);
     }
 
-    // Archer range indicators (semi-transparent lines)
-    for (const Enemy *e : game.getEnemies())
+    // Gargoyles (GARGOYLE phase only)
+    if (phase == Game::Phase::LEVEL3_GARGOYLE)
     {
-        if (e->isDefeated() || e->getType() != EnemyType::ARCHER) continue;
-        const ArcherEnemy *a = static_cast<const ArcherEnemy*>(e);
-        int ex = ox + e->getX()*tileSize + tileSize/2;
-        int ey = oy + e->getY()*tileSize + tileSize/2;
-        p.setPen(QPen(QColor(255, 80, 80, 50 + (int)(20*sin(animFrame*0.2))), 1, Qt::DashLine));
-        p.drawLine(ex, ey, ex, ey + a->getRange()*tileSize);
-        p.drawLine(ex - a->getRange()*tileSize, ey, ex + a->getRange()*tileSize, ey);
-        p.setPen(Qt::NoPen);
+        for (const Gargoyle &g : game.getGargoyles())
+            if (g.alive) drawGargoyle(p, g, tileSize, ox, oy);
+
+        int alive = 0;
+        for (const Gargoyle &g : game.getGargoyles()) if (g.alive) alive++;
+        p.setFont(QFont("Georgia", 10, QFont::Bold));
+        p.setPen(QColor(255, 180, 60));
+        p.drawText(16, 72, QString("Gargoyles remaining: %1  [Space = attack nearest]").arg(alive));
+    }
+
+    // Lever status (CORRIDOR phase)
+    if (phase == Game::Phase::LEVEL3_CORRIDOR)
+    {
+        p.setFont(QFont("Georgia", 10, QFont::Bold));
+        p.setPen(QColor(200, 180, 100));
+        p.drawText(16, 72, QString("Levers pulled: %1 / 4").arg(game.getLeverProgress()));
+        if (game.getLeverStrikes() > 0)
+        {
+            p.setPen(QColor(255, 80, 60));
+            p.drawText(16, 90, QString("Wrong pulls: %1 / 3  — wrong order = instant death!").arg(game.getLeverStrikes()));
+        }
+        if (game.isLeverGateOpen())
+        {
+            p.setPen(QColor(80, 255, 120));
+            p.drawText(16, 108, "Gate open! Reach the exit!");
+        }
     }
 }
 
@@ -1312,17 +1618,27 @@ void GameView::paintEvent(QPaintEvent *)
     int ox = (width() - mapW) / 2;
     int oy = 60 + (height() - 60 - mapH) / 2;
 
+    // Overlay phases that draw everything themselves — skip enemies/player/projectiles
+    bool overlayPhase = (phase == Game::Phase::LEVEL2_WITCH_ROOM  ||
+                         phase == Game::Phase::LEVEL3_SPLASH       ||
+                         phase == Game::Phase::LEVEL3_BRIEFING     ||
+                         phase == Game::Phase::LEVEL3_POEM);
+
     // Draw level-specific background and tiles
     switch (phase)
     {
     case Game::Phase::LEVEL1_EXPLORE:
         drawLevel1(p, tileSize, ox, oy);
         break;
-    case Game::Phase::LEVEL2_RIDDLE:
-    case Game::Phase::LEVEL2_COMBAT:
+    case Game::Phase::LEVEL2_CORRIDOR:
+    case Game::Phase::LEVEL2_WITCH_ROOM:
         drawLevel2(p, tileSize, ox, oy);
         break;
-    case Game::Phase::LEVEL3_INFILTRATE:
+    case Game::Phase::LEVEL3_SPLASH:
+    case Game::Phase::LEVEL3_BRIEFING:
+    case Game::Phase::LEVEL3_GARGOYLE:
+    case Game::Phase::LEVEL3_POEM:
+    case Game::Phase::LEVEL3_CORRIDOR:
         drawLevel3(p, tileSize, ox, oy);
         break;
     case Game::Phase::LEVEL4_NAVIGATE:
@@ -1335,51 +1651,50 @@ void GameView::paintEvent(QPaintEvent *)
         p.fillRect(rect(), QColor(10, 8, 20));
     }
 
-    // Draw enemies
-    for (const Enemy *e : game.getEnemies())
-        drawEnemy(p, e, ox, oy, tileSize);
-
-    // Draw projectiles
-    drawProjectiles(p, ox, oy, tileSize);
-
-    // Draw flash events
-    drawFlashEvents(p, ox, oy, tileSize);
-
-    // Draw player
-    const int px = ox + game.getPlayer().getX() * tileSize;
-    const int py = oy + game.getPlayer().getY() * tileSize;
-    drawPlayer(p, px, py, tileSize);
-
-    // Intro dialog (level 1)
-    if (showIntroDialog && phase == Game::Phase::LEVEL1_EXPLORE && introTimer > 0)
+    if (!overlayPhase)
     {
-        const Enemy *shadow = nullptr;
-        if (!game.getEnemies().isEmpty()) shadow = game.getEnemies().first();
+        // Draw enemies
+        for (const Enemy *e : game.getEnemies())
+            drawEnemy(p, e, ox, oy, tileSize);
 
-        p.setBrush(QColor(255, 248, 230, 220));
-        p.setPen(QPen(QColor(70, 55, 45), 1));
-        p.drawRoundedRect(QRect(px - 100, py - 68, 200, 48), 8, 8);
-        p.setFont(QFont("Georgia", 9));
-        p.setPen(QColor(40, 30, 20));
-        p.drawText(QRect(px - 90, py - 64, 180, 40), Qt::TextWordWrap,
-                   playerName + ": I must reach the cottage!");
+        // Draw projectiles
+        drawProjectiles(p, ox, oy, tileSize);
 
-        if (shadow)
+        // Draw flash events
+        drawFlashEvents(p, ox, oy, tileSize);
+
+        // Draw player
+        const int px = ox + game.getPlayer().getX() * tileSize;
+        const int py = oy + game.getPlayer().getY() * tileSize;
+        drawPlayer(p, px, py, tileSize);
+
+        // Intro dialog (level 1)
+        if (showIntroDialog && phase == Game::Phase::LEVEL1_EXPLORE && introTimer > 0)
         {
-            int ex = ox + shadow->getX() * tileSize;
-            int ey = oy + shadow->getY() * tileSize;
-            p.setBrush(QColor(40, 20, 48, 220));
-            p.setPen(QPen(QColor(176, 120, 176), 1));
-            p.drawRoundedRect(QRect(ex - 40, ey - 62, 190, 44), 8, 8);
-            p.setPen(QColor(240, 215, 255));
-            p.drawText(QRect(ex - 30, ey - 58, 170, 36), Qt::TextWordWrap,
-                       "Shadow: You'll never escape me...");
+            const Enemy *shadow = nullptr;
+            if (!game.getEnemies().isEmpty()) shadow = game.getEnemies().first();
+
+            p.setBrush(QColor(255, 248, 230, 220));
+            p.setPen(QPen(QColor(70, 55, 45), 1));
+            p.drawRoundedRect(QRect(px - 100, py - 68, 200, 48), 8, 8);
+            p.setFont(QFont("Georgia", 9));
+            p.setPen(QColor(40, 30, 20));
+            p.drawText(QRect(px - 90, py - 64, 180, 40), Qt::TextWordWrap,
+                       playerName + ": I must reach the cottage!");
+
+            if (shadow)
+            {
+                int ex2 = ox + shadow->getX() * tileSize;
+                int ey2 = oy + shadow->getY() * tileSize;
+                p.setBrush(QColor(40, 20, 48, 220));
+                p.setPen(QPen(QColor(176, 120, 176), 1));
+                p.drawRoundedRect(QRect(ex2 - 40, ey2 - 62, 190, 44), 8, 8);
+                p.setPen(QColor(240, 215, 255));
+                p.drawText(QRect(ex2 - 30, ey2 - 58, 170, 36), Qt::TextWordWrap,
+                           "Shadow: You'll never escape me...");
+            }
         }
     }
-
-    // Riddle dialog (fullscreen overlay)
-    if (phase == Game::Phase::LEVEL2_RIDDLE)
-        drawRiddleDialog(p);
 
     // Story banner
     drawStoryBanner(p);
@@ -1396,15 +1711,54 @@ void GameView::keyPressEvent(QKeyEvent *event)
 {
     Game::Phase phase = game.getPhase();
 
-    // Riddle navigation
-    if (phase == Game::Phase::LEVEL2_RIDDLE)
+    // Level 2 witch room: typed text input
+    if (phase == Game::Phase::LEVEL2_WITCH_ROOM)
     {
-        int n = game.getRiddleChoices().size();
-        if (event->key() == Qt::Key_Up)   riddleSelected = (riddleSelected - 1 + n) % n;
-        if (event->key() == Qt::Key_Down) riddleSelected = (riddleSelected + 1) % n;
-        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Space)
-            game.answerRiddle(riddleSelected);
+        const WitchScene *ws = game.getWitchScene();
+        if (ws && (ws->phase() == WitchScene::PHASE_RIDDLE || ws->phase() == WitchScene::PHASE_WRONG))
+        {
+            if (event->key() == Qt::Key_Backspace)
+            {
+                if (!witchAnswerInput.isEmpty())
+                    witchAnswerInput.chop(1);
+            }
+            else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+            {
+                game.submitWitchAnswer(witchAnswerInput);
+                witchAnswerInput.clear();
+                checkStateTransitions();
+            }
+            else
+            {
+                QString ch = event->text();
+                if (!ch.isEmpty() && ch[0].isPrint() && witchAnswerInput.length() < 40)
+                    witchAnswerInput += ch;
+            }
+        }
+        else if (event->key() == Qt::Key_Space)
+        {
+            // Advance witch dialogue (ENTER → TAUNT → show riddle)
+            if (ws) {
+                if (ws->phase() == WitchScene::PHASE_ENTER)
+                    const_cast<WitchScene*>(ws)->advanceDialogue();
+                else if (ws->phase() == WitchScene::PHASE_TAUNT)
+                    const_cast<WitchScene*>(ws)->showRiddle();
+            }
+        }
         update();
+        return;
+    }
+
+    // Level 3 overlay phases: Space advances
+    if (phase == Game::Phase::LEVEL3_SPLASH  ||
+        phase == Game::Phase::LEVEL3_BRIEFING ||
+        phase == Game::Phase::LEVEL3_POEM)
+    {
+        if (event->key() == Qt::Key_Space)
+        {
+            game.advanceL3Phase();
+            update();
+        }
         return;
     }
 
@@ -1507,7 +1861,7 @@ void GameView::checkStateTransitions()
         {
             emit levelComplete(game.getCurrentLevel());
             game.advanceToNextLevel();
-            riddleSelected = 0;
+            witchAnswerInput.clear();
             showIntroDialog = true;
             introTimer = 200;
         }
