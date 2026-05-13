@@ -1,27 +1,19 @@
 #include "witchscene.h"
-
 WitchScene::WitchScene(const QString &role)
     : m_role(role)
 {
     buildRiddle(role);
 }
-
-// ---------------------------------------------------------------------------
-// What the witch says depending on the current phase
-// ---------------------------------------------------------------------------
 QString WitchScene::witchLine() const
 {
     switch (m_phase)
     {
     case PHASE_ENTER:
         return "GET OUT of my cottage, wretch!\nYou dare enter uninvited?!";
-
     case PHASE_TAUNT:
         return "The door is sealed by my curse.\nOnly a worthy mind may leave.\nPress the button below... if you dare.";
-
     case PHASE_RIDDLE:
         return "Answer correctly and you shall pass.\nAnswer wrongly... and you stay. Forever.";
-
     case PHASE_WRONG:
         if (m_wrongAttempts == 1)
             return "Bwahahaha! Wrong! Try again, fool.\nMy patience wears thin...";
@@ -29,16 +21,13 @@ QString WitchScene::witchLine() const
             return "Still wrong?! You disappoint me.\nThink harder, adventurer!";
         else
             return "You are hopeless... yet my curse demands\nI give you one last chance.";
-
     case PHASE_ESCAPED:
         return "Impossible... you solved it.\nBe gone from my sight!";
     }
     return "";
 }
-
-// ---------------------------------------------------------------------------
-// Riddles tailored to each class
-// ---------------------------------------------------------------------------
+QString WitchScene::riddleText() const { return m_riddleText; }
+QString WitchScene::hintText()   const { return m_hintText;   }
 void WitchScene::buildRiddle(const QString &role)
 {
     if (role == "Wizard")
@@ -72,7 +61,7 @@ void WitchScene::buildRiddle(const QString &role)
         m_hintText   = "Hint: A Rogue knows how to use me to hide.";
         m_answers    = { "shadow", "my shadow", "a shadow", "your shadow" };
     }
-    else // Cleric
+    else 
     {
         m_riddleText =
             "I speak without a mouth,\n"
@@ -83,22 +72,16 @@ void WitchScene::buildRiddle(const QString &role)
         m_answers    = { "echo", "an echo" };
     }
 }
-
-// ---------------------------------------------------------------------------
-// Phase transitions
-// ---------------------------------------------------------------------------
 void WitchScene::advanceDialogue()
 {
     if (m_phase == PHASE_ENTER)
         m_phase = PHASE_TAUNT;
 }
-
 void WitchScene::showRiddle()
 {
     if (m_phase == PHASE_TAUNT || m_phase == PHASE_WRONG)
         m_phase = PHASE_RIDDLE;
 }
-
 void WitchScene::submitAnswer(const QString &answer)
 {
     const QString trimmed = answer.trimmed().toLower();

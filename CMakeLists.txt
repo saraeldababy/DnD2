@@ -19,7 +19,8 @@ qt_add_executable(DungeonRealm
     gameview.h gameview.cpp
     level2view.h level2view.cpp
     witchscene.h witchscene.cpp
-
+    level3view.h level3view.cpp
+    level3view.h level3view.cpp
     player.h player.cpp
     character.h character.cpp
     enemy.h enemy.cpp
