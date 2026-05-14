@@ -85,39 +85,6 @@ void TrapEnemy::reset()   { triggered = false; }
 void TrapEnemy::hide() { if (!triggered) visible = false; }
 
 // --- Patrol Guard ---
-// PatrolEnemy::PatrolEnemy(int sx, int sy, int eax, int eay, int ebx, int eby, int id_)
-//     : Enemy(sx, sy, 40, 15, EnemyType::PATROL, "Castle Guard", id_),
-//     ax(eax), ay(eay), bx(ebx), by(eby),
-//     goingToB(true), fast(false), turnCount(0)
-// {}
-
-// void PatrolEnemy::moveToward(int /*tx*/, int /*ty*/, bool (*walkable)(int, int))
-// {
-//     if (isDefeated()) return;
-//     turnCount++;
-//     if (!fast && turnCount % 2 != 0) return; // normal: every other turn
-
-//     int targetX = goingToB ? bx : ax;
-//     int targetY = goingToB ? by : ay;
-//     int dx = targetX - x;
-//     int dy = targetY - y;
-
-//     if (dx == 0 && dy == 0) { goingToB = !goingToB; return; } // reached waypoint
-
-//     int stepX = (dx > 0) ? 1 : (dx < 0) ? -1 : 0;
-//     int stepY = (dy > 0) ? 1 : (dy < 0) ? -1 : 0;
-
-//     if (abs(dx) >= abs(dy)) {
-//         if (stepX != 0 && walkable(x + stepX, y)) x += stepX;
-//         else if (stepY != 0 && walkable(x, y + stepY)) y += stepY;
-//     } else {
-//         if (stepY != 0 && walkable(x, y + stepY)) y += stepY;
-//         else if (stepX != 0 && walkable(x + stepX, y)) x += stepX;
-//     }
-// }
-
-// void PatrolEnemy::onAlarm() { fast = true; }
-// --- Patrol Guard ---
 PatrolEnemy::PatrolEnemy(int sx, int sy, QVector<QPoint> pts, int id_)
     : Enemy(sx, sy, 40, 15, EnemyType::PATROL, "Castle Guard", id_),
     waypoints(pts), waypointIndex(0), chasing(false)

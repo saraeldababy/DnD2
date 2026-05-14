@@ -59,6 +59,7 @@ public:
     // Score
     int getScore() const;
     void addScore(int v);
+    void setScore(int v);
 
     // Inventory
     QStringList getInventory() const;

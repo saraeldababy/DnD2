@@ -10,9 +10,8 @@ static bool staticWalkable(int x, int y)
     return g_levelPtr->isWalkableForEnemy(x, y);
 }
 
-// -------------------------------------------------------
-// Construction / destruction
-// -------------------------------------------------------
+
+// CONSTRUCTORS/DESTRUCTORS
 
 Game::Game(int /*size*/)
     : phase(Phase::LEVEL1_EXPLORE), currentLevel(1),
@@ -39,10 +38,9 @@ void Game::clearEnemies()
 
 bool Game::isAlarmActive() const { return alarmActive; }
 bool Game::areGuardsChasing() const { return guardsChasing; }
-// -------------------------------------------------------
-// Level builders
-// -------------------------------------------------------
 
+
+// LEVEL BUILDERS
 void Game::buildLevel1()
 {
     clearEnemies();
@@ -214,76 +212,6 @@ void Game::buildLevel3Corridor()
     storyMessages.append("Three wrong pulls and the curse claims you.");
     storyMsgTimer = 200;
 }
-
-// void Game::buildLevel4()
-// {
-//     clearEnemies();
-//     projectiles.clear();
-//     flashEvents.clear();
-//     for (int i = 0; i < 4; ++i) doorsOpened[i] = false;
-//     trapPositions.clear();
-//     keyPositions.clear();
-//     lockedDoorPositions.clear();
-//     chestPositions.clear();
-
-//     // 14x14 so the map fits on screen (14*44=616px, playable height=620px)
-//     level = Level(14);
-//     for (int x = 0; x < 14; ++x)
-//         for (int y = 0; y < 14; ++y)
-//             level.map[x][y] = Level::FLOOR;
-
-//     // Outer walls
-//     for (int i = 0; i < 14; ++i)
-//     {
-//         level.map[i][0]  = Level::WALL;
-//         level.map[i][13] = Level::WALL;
-//         level.map[0][i]  = Level::WALL;
-//         level.map[13][i] = Level::WALL;
-//     }
-
-//     // --- Room dividers (no overlapping assignments) ---
-//     // Wall A: vertical at x=5 (y=1..12), locked door at y=6
-//     for (int y = 1; y <= 12; ++y)
-//         level.map[5][y] = (y == 6) ? Level::LOCKED : Level::WALL;
-//     lockedDoorPositions.append({5, 6});
-
-//     // Wall B: vertical at x=9 (y=1..12), locked door at y=6
-//     for (int y = 1; y <= 12; ++y)
-//         level.map[9][y] = (y == 6) ? Level::LOCKED : Level::WALL;
-//     lockedDoorPositions.append({9, 6});
-
-//     // --- Keys (2 in each of the first two sections) ---
-//     level.map[3][3]  = Level::KEY_TILE; keyPositions.append({3,  3});
-//     level.map[3][10] = Level::KEY_TILE; keyPositions.append({3, 10});
-//     level.map[7][3]  = Level::KEY_TILE; keyPositions.append({7,  3});
-//     level.map[7][9]  = Level::KEY_TILE; keyPositions.append({7,  9});
-
-//     // --- Traps (none overlap keys/walls) ---
-//     const int trapCoords[][2] = {{2,8},{4,2},{6,8},{8,2},{11,5},{11,9},{3,12},{6,12}};
-//     for (auto& tc : trapCoords)
-//     {
-//         trapPositions.append({tc[0], tc[1]});
-//         enemies.append(new TrapEnemy(tc[0], tc[1], (int)enemies.size()));
-//     }
-
-//     // --- Chest with health potion ---
-//     level.map[12][11] = Level::CHEST;
-//     chestPositions.append({12, 11});
-
-//     // --- Dungeon stairs (goal) ---
-//     level.map[12][2] = Level::STAIRS;
-
-//     g_levelPtr = &level;
-//     phase = Phase::LEVEL4_NAVIGATE;
-
-//     player.setX(1); player.setY(6);
-//     player.resetForLevel(1, 6);
-
-//     storyMessages.clear();
-//     storyMessages.append("Inside the castle. Find 4 keys and open 2 locked doors to reach the dungeon stairs!");
-//     storyMessages.append("Hidden floor traps lurk everywhere. Use P for health potions!");
-//     storyMsgTimer = 220;
-// }
 
 void Game::buildLevel4()
 {
@@ -463,23 +391,19 @@ void Game::buildLevel5()
 
     storyMessages.clear();
     storyMessages.append("The dungeon reeks of sulfur. Drakoroth guards the cell!");
-    storyMessages.append("Aldric calls out: 'Help! The dragon holds the key to my cell!'");
+    storyMessages.append("Will calls out: 'Help! The dragon holds the key to my cell!'");
     storyMessages.append("Find the Dungeon Slayer Sword — only it can harm the dragon!");
     storyMsgTimer = 240;
 }
 
-// -------------------------------------------------------
-// Walkable helper
-// -------------------------------------------------------
+// WALKABLE HELPERS
 
 bool Game::levelWalkable(int x, int y) const
 {
     return level.isWalkable(x, y);
 }
 
-// -------------------------------------------------------
-// Move player
-// -------------------------------------------------------
+// MOVE PLAYERS
 
 void Game::movePlayer(int dx, int dy)
 {
@@ -550,47 +474,7 @@ void Game::movePlayer(int dx, int dy)
             pullLever(leverIdx);
     }
 
-    // Level 4: locked door unlock + traps
-    // if (phase == Phase::LEVEL4_NAVIGATE)
-    // {
-    //     for (int i = 0; i < lockedDoorPositions.size(); ++i)
-    //     {
-    //         const QPoint &dp = lockedDoorPositions[i];
-    //         if (abs(dp.x() - player.getX()) + abs(dp.y() - player.getY()) == 1)
-    //         {
-    //             if (player.getKeys() > 0 && !doorsOpened[i])
-    //             {
-    //                 player.useKey();
-    //                 doorsOpened[i] = true;
-    //                 level.map[dp.x()][dp.y()] = Level::DOOR;
-    //                 storyMessages.prepend("Door unlocked!");
-    //                 storyMsgTimer = 120;
-    //             }
-    //         }
-    //     }
 
-    //     for (auto *e : enemies)
-    //     {
-    //         if (e->getType() == EnemyType::TRAP && !e->isDefeated())
-    //         {
-    //             TrapEnemy *trap = static_cast<TrapEnemy*>(e);
-    //             if (!trap->isTriggered() &&
-    //                 e->getX() == player.getX() && e->getY() == player.getY())
-    //             {
-    //                 trap->trigger();
-    //                 if (damageCooldown == 0)
-    //                 {
-    //                     player.takeDamage(trap->getAttackPower());
-    //                     damageCooldown = 30;
-    //                     flashEvents.append({player.getX(), player.getY(), 25, "hit"});
-    //                     storyMessages.prepend("TRAP! You take " +
-    //                                           QString::number(trap->getAttackPower()) + " damage!");
-    //                     storyMsgTimer = 150;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
     if (phase == Phase::LEVEL4_NAVIGATE && tile == Level::KEY_TILE && !alarmActive)
         triggerAlarm();
 
@@ -618,9 +502,7 @@ void Game::movePlayer(int dx, int dy)
     // Level 5: unlock cell door when adjacent and holding dragon key
     if (phase == Phase::LEVEL5_DRAGON && dragonDefeated && player.getKeys() > 0)
     {
-        // // Cell door is at (11, 6)
-        // if (abs(11 - player.getX()) + abs(6 - player.getY()) <= 1)
-        // {
+        // Cell door is at (11, 6)
         if (tile == Level::KEY_TILE || player.getKeys() > 0)
         {
             if (abs(11 - player.getX()) + abs(6 - player.getY()) <= 1 && player.getKeys() > 0)
@@ -628,7 +510,7 @@ void Game::movePlayer(int dx, int dy)
             player.useKey();
             cellUnlocked = true;
             level.map[11][6] = Level::DOOR;
-            storyMessages.prepend("The cell is open! Aldric is free!");
+            storyMessages.prepend("The cell is open! Will is free!");
             storyMsgTimer = 200;
             }
         }
@@ -642,9 +524,7 @@ void Game::movePlayer(int dx, int dy)
     }
 }
 
-// -------------------------------------------------------
-// Player attack
-// -------------------------------------------------------
+// PLAYER ATTACK
 
 void Game::playerAttack()
 {
@@ -749,9 +629,7 @@ void Game::playerAttack()
     }
 }
 
-// -------------------------------------------------------
-// Update enemies
-// -------------------------------------------------------
+// UPDATE ENEMIES
 
 void Game::updateEnemies()
 {
@@ -805,33 +683,6 @@ void Game::updateEnemies()
             break; // handled in movePlayer
         case EnemyType::DRAGON:
         {
-            // DragonEnemy *dragon = static_cast<DragonEnemy*>(e);
-            // dragon->updatePhase();
-            // //dragon->tickBreathCooldown();
-            // e->moveToward(px, py, staticWalkable);
-
-            // if (e->getX() == px && e->getY() == py && damageCooldown == 0)
-            // {
-            //     player.takeDamage(e->getAttackPower());
-            //     damageCooldown = 35;
-            //     flashEvents.append({px, py, 25, "hit"});
-            // }
-
-            // if (dragon->canBreatheFire(px, py) && dragon->readyToBreath())
-            // {
-            //     Projectile fire;
-            //     fire.x = (float)e->getX(); fire.y = (float)e->getY();
-            //     float len = std::max(1.0f, sqrtf(
-            //                                    powf((float)(px - e->getX()), 2) + powf((float)(py - e->getY()), 2)));
-            //     fire.dx     = (px - e->getX()) / len;
-            //     fire.dy     = (py - e->getY()) / len;
-            //     fire.damage = (dragon->getPhase() == 2) ? 35 : 20;
-            //     fire.type   = "fireball";
-            //     fire.active = true;
-            //     projectiles.append(fire);
-            //     dragon->resetBreathCooldown();
-            // }
-            // break;
             DragonEnemy *dragon = static_cast<DragonEnemy*>(e);
             dragon->updatePhase();
             e->moveToward(px, py, staticWalkable);
@@ -934,9 +785,8 @@ void Game::updateEnemies()
     }
 }
 
-// -------------------------------------------------------
-// Projectiles
-// -------------------------------------------------------
+
+// PROJECTILES
 
 void Game::updateProjectiles()
 {
@@ -972,9 +822,7 @@ void Game::updateProjectiles()
         projectiles.end());
 }
 
-// -------------------------------------------------------
-// Win / Lose
-// -------------------------------------------------------
+// WIN/LOSE
 
 bool Game::checkWin()
 {
@@ -1015,9 +863,7 @@ bool Game::checkLose()
     return !player.isAlive();
 }
 
-// -------------------------------------------------------
-// Level 2 witch / Level 3 lever — new systems
-// -------------------------------------------------------
+// LEVEL 2 WITCH/LEVEL 3 LEVER SYSTEM
 
 void Game::submitWitchAnswer(const QString &answer)
 {
@@ -1098,17 +944,12 @@ bool                       Game::isLeverGateOpen()  const { return leverGateOpen
 int                        Game::getLeverProgress() const { return leverProgress; }
 int                        Game::getLeverStrikes()  const { return leverStrikes; }
 
-// -------------------------------------------------------
-// Potions
-// -------------------------------------------------------
+// POTIONS
 
 bool Game::usePotion() { return player.usePotion(); }
 
 
-// -------------------------------------------------------
-// Reinit (safe full reset — avoids the Game = Game() copy bug)
-// -------------------------------------------------------
-
+// Reinit (safe full reset)
 void Game::reinit()
 {
     clearEnemies();
@@ -1141,10 +982,8 @@ void Game::reinit()
     buildLevel1();
 }
 
-// -------------------------------------------------------
-// Restart current level (loss mechanic)
-// -------------------------------------------------------
 
+// Restart current level
 void Game::restartCurrentLevel()
 {
     switch (currentLevel)
@@ -1158,10 +997,9 @@ void Game::restartCurrentLevel()
     }
     player.heal(player.getMaxHealth());
 }
-// -------------------------------------------------------
-// Level transition
-// -------------------------------------------------------
 
+
+// LEVEL TRANSITION
 void Game::advanceToNextLevel()
 {
     player.addScore(500 * currentLevel);
@@ -1179,21 +1017,19 @@ void Game::advanceToNextLevel()
     }
 }
 
-// -------------------------------------------------------
-// Getters
-// -------------------------------------------------------
+// GETTERS
 
-Game::Phase                    Game::getPhase()          const { return phase; }
-int                            Game::getCurrentLevel()   const { return currentLevel; }
-Player                        &Game::getPlayer()               { return player; }
-const QVector<Enemy*>         &Game::getEnemies()        const { return enemies; }
-Level                         &Game::getLevel()               { return level; }
-const QVector<Projectile>     &Game::getProjectiles()    const { return projectiles; }
-const QVector<FlashEvent>     &Game::getFlashEvents()    const { return flashEvents; }
-bool                           Game::isDoorOpen(int i)   const { return (i>=0&&i<4)?doorsOpened[i]:false; }
-bool                           Game::isCellUnlocked()    const { return cellUnlocked; }
-bool   Game::playerHasSword()       const { return hasSword; }
-bool   Game::isMegaFireWarning()    const { return megaFireWarningActive; }
+Game::Phase Game::getPhase() const { return phase; }
+int Game::getCurrentLevel() const { return currentLevel; }
+Player &Game::getPlayer() { return player; }
+const QVector<Enemy*> &Game::getEnemies() const { return enemies; }
+Level &Game::getLevel() { return level; }
+const QVector<Projectile> &Game::getProjectiles() const { return projectiles; }
+const QVector<FlashEvent> &Game::getFlashEvents() const { return flashEvents; }
+bool Game::isDoorOpen(int i) const { return (i>=0&&i<4)?doorsOpened[i]:false; }
+bool Game::isCellUnlocked() const { return cellUnlocked; }
+bool Game::playerHasSword() const { return hasSword; }
+bool Game::isMegaFireWarning() const { return megaFireWarningActive; }
 QPoint Game::getMegaFireWarningCenter() const
 {
     for (auto *e : enemies)
@@ -1211,10 +1047,7 @@ void Game::clearFlashEvents()
         flashEvents.end());
 }
 
-// -------------------------------------------------------
-// Story messages
-// -------------------------------------------------------
-
+// STORY MESSAGES
 QString Game::storyHint() const
 {
     switch (phase)
@@ -1243,7 +1076,7 @@ QString Game::storyHint() const
         return "Reach the center room, grab the key, then race to the stairs.";
     case Phase::LEVEL5_DRAGON:
         return dragonDefeated
-                   ? "Dragon slain! Take the key, open the cell to free Aldric!"
+                   ? "Dragon slain! Take the key, open the cell to free Will!"
                    : "Fight Drakoroth! Space=Attack  P=Potion  Stay out of fire!";
     default: return "";
     }
@@ -1269,9 +1102,7 @@ bool Game::hasStoryMessage() const
     return !storyMessages.isEmpty() && storyMsgTimer > 0;
 }
 
-// -------------------------------------------------------
-// Save / Load
-// -------------------------------------------------------
+// SAVE/LOAD
 
 Game::SaveState Game::getSaveState() const
 {
@@ -1307,7 +1138,7 @@ Game::SaveState Game::getSaveState() const
         }
     }
 
-    // If current level is already won, bump to next level so load starts there
+    // If current level is already won, go to next level so load starts there
     if (s.witchEscaped && s.currentLevel == 2)
     {
         s.currentLevel = 3;

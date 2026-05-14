@@ -6,9 +6,7 @@
 #include <QFont>
 #include <cmath>
 
-// -------------------------------------------------------
-// Construction
-// -------------------------------------------------------
+// CONSTRUCTORS
 
 GameView::GameView(QWidget *parent)
     : QWidget(parent), playerName("Adventurer"),
@@ -64,9 +62,7 @@ void GameView::resetGame()
 
 Game &GameView::getGame() { return game; }
 
-// -------------------------------------------------------
-// Helpers
-// -------------------------------------------------------
+// HELPERS
 
 QRect GameView::tileRect(int x, int y, int tileSize, int ox, int oy) const
 {
@@ -88,9 +84,7 @@ void GameView::drawHealthBar(QPainter &p, int x, int y, int w, int h,
                QString::number(hp) + "/" + QString::number(maxhp));
 }
 
-// -------------------------------------------------------
-// HUD
-// -------------------------------------------------------
+// HEADS UP DISPLAY
 
 void GameView::drawHUD(QPainter &p)
 {
@@ -142,36 +136,18 @@ void GameView::drawHUD(QPainter &p)
     p.drawLine(0, 52, W, 52);
 
     // Alarm countdown for level 4
-//     if (game.isAlarmActive() && game.getCurrentLevel() == 4)
-//     {
-//         int flash = 180 + (int)(75 * sin(animFrame * 0.3));
-//         p.setFont(QFont("Georgia", 13, QFont::Bold));
-//         p.setPen(QColor(255, flash > 255 ? 255 : flash, 0));
-//         p.drawText(W / 2 - 110, 20, "!! ALARM — " +
-//                                         QString::number(game.getAlarmTimer()) + " turns left !!");
-//     }
-// }
     if (game.isAlarmActive() && game.getCurrentLevel() == 4)
     {
         int flash = 180 + (int)(75 * sin(animFrame * 0.4));
         int c = flash > 255 ? 255 : flash;
         p.setFont(QFont("Georgia", 15, QFont::Bold));
-        // if (!game.areGuardsChasing()) {
-        //     p.setPen(QColor(255, c, 0));
-        //     p.drawText(W / 2 - 90, 24, "!! ALARM — " + QString::number(alarmSecondsLeft) + " !!");
-        // } else {
-        //     p.setPen(QColor(255, c, c));
-        //     p.drawText(W / 2 - 120, 24, "!! GUARDS ARE HUNTING YOU !!");
-        // }
         p.setPen(QColor(255, c, c));
         p.drawText(W / 2 - 130, 24,
                    "!! GUARDS HUNTING — " + QString::number(alarmSecondsLeft) + "s !!");
     }
 }
 
-// -------------------------------------------------------
-// Story banner (bottom)
-// -------------------------------------------------------
+// STORY BANNER (BOTTOM)
 
 void GameView::drawStoryBanner(QPainter &p)
 {
@@ -190,9 +166,7 @@ void GameView::drawStoryBanner(QPainter &p)
     p.drawText(QRect(30, H - 62, W - 60, 44), Qt::AlignVCenter | Qt::TextWordWrap, msg);
 }
 
-// -------------------------------------------------------
-// Flash events
-// -------------------------------------------------------
+// FLASH EVENTS
 
 void GameView::drawFlashEvents(QPainter &p, int ox, int oy, int tileSize)
 {
@@ -237,9 +211,7 @@ void GameView::drawFlashEvents(QPainter &p, int ox, int oy, int tileSize)
     }
 }
 
-// -------------------------------------------------------
-// Player ui
-// -------------------------------------------------------
+// PLAYER VISUALS
 
 void GameView::drawPlayer(QPainter &p, int px, int py, int tileSize)
 {
@@ -329,9 +301,7 @@ void GameView::drawPlayer(QPainter &p, int px, int py, int tileSize)
     }
 }
 
-// -------------------------------------------------------
-// Enemy sprites
-// -------------------------------------------------------
+// ENEMY VISUALS
 
 void GameView::drawEnemy(QPainter &p, const Enemy *e, int ox, int oy, int tileSize)
 {
@@ -508,9 +478,7 @@ void GameView::drawEnemy(QPainter &p, const Enemy *e, int ox, int oy, int tileSi
     }
 }
 
-// -------------------------------------------------------
-// Projectiles
-// -------------------------------------------------------
+// PROJECTILES
 
 void GameView::drawProjectiles(QPainter &p, int ox, int oy, int tileSize)
 {
@@ -548,9 +516,7 @@ void GameView::drawProjectiles(QPainter &p, int ox, int oy, int tileSize)
     }
 }
 
-// -------------------------------------------------------
-// Level-specific renderers
-// -------------------------------------------------------
+// LEVEL-SPECIFIC VISUALS
 
 void GameView::drawLevel1(QPainter &p, int tileSize, int ox, int oy)
 {
@@ -835,7 +801,7 @@ void GameView::drawLevel2(QPainter &p, int tileSize, int ox, int oy)
             p.drawEllipse(tx-fl, ty-fl, fl*2, fl*2);
         }
     }
-    else // LEVEL2_WITCH_ROOM
+    else // LEVEL2 WITCH ROOM
     {
         QLinearGradient bg(0, 52, 0, height());
         bg.setColorAt(0.0, QColor(18, 10, 6));
@@ -994,8 +960,6 @@ void GameView::drawPoemClue(QPainter &p)
 
     // Role-specific poem and order
     struct PoemData { QString role, verse, order; };
-    // Sequences: Wizard={1,3,0,2}=☽✝★⚡  Fighter={2,0,3,1}=⚡★✝☽
-    //            Rogue={3,2,1,0}=✝⚡☽★   Cleric={0,1,2,3}=★☽⚡✝
     static const PoemData poems[] = {
         {"Wizard",
          "First the Moon in silver light,\n"
@@ -1194,105 +1158,6 @@ void GameView::drawLevel3(QPainter &p, int tileSize, int ox, int oy)
     }
 }
 
-// void GameView::drawLevel4(QPainter &p, int tileSize, int ox, int oy)
-// {
-//     Level &lv = game.getLevel();
-
-//     // Dark stone dungeon atmosphere
-//     QLinearGradient bg(0,52,width(),height());
-//     bg.setColorAt(0, QColor(15,12,20));
-//     bg.setColorAt(1, QColor(25,18,10));
-//     p.fillRect(0, 52, width(), height()-52, bg);
-
-//     for (int x = 0; x < lv.gridSize; ++x)
-//         for (int y = 0; y < lv.gridSize; ++y)
-//         {
-//             QRect tile = tileRect(x, y, tileSize, ox, oy);
-//             int kind = lv.map[x][y];
-
-//             if (kind == Level::FLOOR)
-//             {
-//                 int shade = 45 + (x+y)%2*8;
-//                 p.setBrush(QColor(shade, shade-5, shade-10));
-//                 p.setPen(QPen(QColor(30,25,20), 1));
-//                 p.drawRect(tile);
-//             }
-//             else if (kind == Level::WALL)
-//             {
-//                 p.setBrush(QColor(75, 68, 60));
-//                 p.setPen(Qt::NoPen);
-//                 p.drawRect(tile);
-//                 p.setBrush(QColor(62, 56, 50));
-//                 p.drawRect(tile.adjusted(1,1,-1,-tileSize/2));
-//             }
-//             else if (kind == Level::LOCKED)
-//             {
-//                 p.setBrush(QColor(100, 60, 20));
-//                 p.setPen(QPen(QColor(200, 140, 40), 2));
-//                 p.drawRect(tile);
-//                 // Lock icon
-//                 p.setBrush(QColor(200, 160, 50));
-//                 p.setPen(Qt::NoPen);
-//                 p.drawRoundedRect(tile.center().x()-6, tile.center().y()-2, 12, 10, 3, 3);
-//                 p.setBrush(Qt::NoBrush);
-//                 p.setPen(QPen(QColor(200, 160, 50), 2));
-//                 p.drawArc(tile.center().x()-5, tile.center().y()-9, 10, 10, 0, 180*16);
-//             }
-//             else if (kind == Level::DOOR)
-//             {
-//                 p.setBrush(QColor(100, 70, 40));
-//                 p.setPen(QPen(QColor(160, 120, 60), 1));
-//                 p.drawRect(tile);
-//             }
-//             else if (kind == Level::KEY_TILE)
-//             {
-//                 p.setBrush(QColor(45, 40, 35));
-//                 p.setPen(Qt::NoPen);
-//                 p.drawRect(tile);
-//                 // Key sparkle
-//                 float glow = 4 + 2*sin(animFrame*0.2 + x*0.5);
-//                 p.setBrush(QColor(255, 210, 50, 200));
-//                 p.drawEllipse(tile.center().x()-(int)glow, tile.center().y()-(int)glow, (int)glow*2, (int)glow*2);
-//                 p.setBrush(QColor(255, 240, 120, 120));
-//                 p.drawEllipse(tile.center().x()-(int)glow*2, tile.center().y()-(int)glow*2, (int)glow*4, (int)glow*4);
-//             }
-//             else if (kind == Level::CHEST)
-//             {
-//                 p.setBrush(QColor(100, 70, 30));
-//                 p.setPen(QPen(QColor(180, 140, 50), 1));
-//                 p.drawRoundedRect(tile.adjusted(3,8,-3,-8), 4, 4);
-//                 p.setBrush(QColor(190, 150, 55));
-//                 p.drawRect(tile.adjusted(7,12,-7,4));
-//             }
-//             else if (kind == Level::STAIRS)
-//             {
-//                 p.setBrush(QColor(40, 50, 70));
-//                 p.setPen(Qt::NoPen);
-//                 p.drawRect(tile);
-//                 p.setPen(QPen(QColor(80, 100, 140), 2));
-//                 for (int s = 0; s < 4; ++s)
-//                     p.drawLine(tile.left()+3+s*6, tile.bottom()-4-s*6,
-//                                tile.right()-3, tile.bottom()-4-s*6);
-//             }
-//         }
-
-//     // Mini-map legend
-//     p.setBrush(QColor(10, 8, 15, 200));
-//     p.setPen(QPen(QColor(80, 60, 100), 1));
-//     p.drawRoundedRect(width()-180, 60, 168, 100, 6, 6);
-//     p.setPen(QColor(160, 140, 200));
-//     p.setFont(QFont("Georgia", 8, QFont::Bold));
-//     p.drawText(width()-170, 74, "MAP LEGEND");
-//     p.setFont(QFont("Georgia", 8));
-//     p.drawText(width()-170, 90, "🗝 Key tiles");
-//     p.drawText(width()-170, 105, "🔒 Locked doors");
-//     p.drawText(width()-170, 120, "⚡ Hidden traps");
-//     p.drawText(width()-170, 135, "⬇ Stairs (goal)");
-//     // Key count
-//     p.setPen(QColor(255, 210, 80));
-//     p.setFont(QFont("Georgia", 9, QFont::Bold));
-//     p.drawText(width()-170, 154, "Keys in hand: " + QString::number(game.getPlayer().getKeys()) + " / 4");
-// }
 
 void GameView::drawLevel4(QPainter &p, int tileSize, int ox, int oy)
 {
@@ -1600,9 +1465,7 @@ void GameView::drawLevel5(QPainter &p, int tileSize, int ox, int oy)
     }
 }
 
-// -------------------------------------------------------
-// Main paint event
-// -------------------------------------------------------
+// MAIN PAINT EVENT
 
 void GameView::paintEvent(QPaintEvent *)
 {
@@ -1703,9 +1566,7 @@ void GameView::paintEvent(QPaintEvent *)
     drawHUD(p);
 }
 
-// -------------------------------------------------------
-// Key input
-// -------------------------------------------------------
+// KEYBOARD INPUT
 
 void GameView::keyPressEvent(QKeyEvent *event)
 {
@@ -1796,21 +1657,7 @@ void GameView::keyPressEvent(QKeyEvent *event)
     {
         showIntroDialog = false;
         game.movePlayer(dx, dy);
-        // // Level 4: start trap-hide timer once on first move
-        // if (game.getCurrentLevel() == 4 && !trapHideTimer)
-        // {
-        //     trapHideTimer = new QTimer(this);
-        //     trapHideTimer->setSingleShot(true);
-        //     connect(trapHideTimer, &QTimer::timeout, this, [this]() {
-        //         for (Enemy *e : game.getEnemies())
-        //             if (e->getType() == EnemyType::TRAP)
-        //                 static_cast<TrapEnemy*>(e)->hide();
-        //         trapHideTimer = nullptr;
-        //         update();
-        //     });
-        //     trapHideTimer->start(10000); // 10 seconds
-        // }
-
+        // Level 4: start trap-hide timer once on first move
         if ((game.getCurrentLevel() == 4 || game.getCurrentLevel() == 5) && !trapHideTimer)
         {
             int hideDelay = (game.getCurrentLevel() == 5) ? 5000 : 10000;

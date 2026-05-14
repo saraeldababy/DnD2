@@ -102,3 +102,5 @@ void WitchScene::submitAnswer(const QString &answer)
     ++m_wrongAttempts;
     m_phase = PHASE_WRONG;
 }
+
+void WitchScene::forceEscaped() { m_phase = PHASE_ESCAPED; }

@@ -182,6 +182,27 @@ public:
         QVector<int> enemyHP;
         bool doorsOpened[4];
         bool cellUnlocked;
+
+        // Witch (Level 2)
+        int  witchWrongAttempts = 0;
+        bool witchEscaped       = false;
+
+        // Levers (Level 3)
+        int  leverProgress      = 0;
+        int  leverStrikes       = 0;
+        bool leverGateOpen      = false;
+        bool leverLocked[4]     = {false, false, false, false};
+
+        // Gargoyles (Level 3)
+        QVector<int> gargoyleHP;
+
+        // Level 5
+        bool hasSword       = false;
+        bool dragonDefeated = false;
+
+        // Level 4 alarm
+        bool alarmActive   = false;
+        bool guardsChasing = false;
     };
     SaveState getSaveState() const;
     void loadSaveState(const SaveState &s);

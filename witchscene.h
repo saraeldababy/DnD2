@@ -28,6 +28,7 @@ public:
     void advanceDialogue();
     void showRiddle();
     void submitAnswer(const QString &answer);
+    void forceEscaped();
 
 private:
     void buildRiddle(const QString &role);

@@ -59,6 +59,7 @@ bool Player::useKey()
 
 int Player::getScore() const { return score; }
 void Player::addScore(int v) { score += v; }
+void Player::setScore(int v) { score = v; }
 
 QStringList Player::getInventory() const { return inventory; }
 void Player::addItem(const QString &item) { if (!inventory.contains(item)) inventory.append(item); }

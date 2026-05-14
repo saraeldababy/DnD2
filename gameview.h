@@ -15,6 +15,7 @@ private:
     QString playerName;
     bool showIntroDialog;
     int introTimer;
+    int restartCooldown;
 
     // Witch room text input
     QString witchAnswerInput;
@@ -71,6 +72,7 @@ signals:
     void levelComplete(int level);
     void gameLost();
     void gameWon();
+    void skipLevelRequested();
 
 protected:
     void paintEvent(QPaintEvent *) override;

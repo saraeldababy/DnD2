@@ -82,9 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 }
 
-// -------------------------------------------------------
-// Screen builders
-// -------------------------------------------------------
+// SCREEN BUILDERS
 
 QWidget *MainWindow::buildMenuScreen()
 {
@@ -104,7 +102,7 @@ QWidget *MainWindow::buildMenuScreen()
         "margin-bottom: 20px;");
 
     QLabel *loreLabel = new QLabel(
-        "Your friend Aldric ventured into the forbidden castle to steal the dragon's treasure.\n"
+        "Your friend Will ventured into the forbidden castle to steal the dragon's treasure.\n"
         "He was captured. You must brave five perilous levels to bring him home.");
     loreLabel->setAlignment(Qt::AlignCenter);
     loreLabel->setWordWrap(true);
@@ -232,9 +230,7 @@ QWidget *MainWindow::buildEndScreen()
     return w;
 }
 
-// -------------------------------------------------------
-// Game start
-// -------------------------------------------------------
+// GAME START
 
 void MainWindow::startGame(bool fromSave)
 {
@@ -265,9 +261,7 @@ void MainWindow::startGame(bool fromSave)
     autoSaveTimer->start();
 }
 
-// -------------------------------------------------------
-// Level transition — messages updated for the 1→4 skip
-// -------------------------------------------------------
+// LEVEL TRANSITION — messages updated for the 1→4 skip
 
 void MainWindow::showLevelTransition(int completedLevel)
 {
@@ -277,7 +271,7 @@ void MainWindow::showLevelTransition(int completedLevel)
     case 1:
         msg = "Level 1 Complete!\n"
               "You escaped the Whispering Forest!\n\n"
-              "You learn that your friend Aldric is imprisoned\n"
+              "You learn that your friend Will is imprisoned\n"
               "in the dungeon beneath the great castle.\n\n"
               "The Witch's Corridor lies ahead...";
         break;
@@ -327,7 +321,7 @@ void MainWindow::showEndScreen(bool won)
         int score = gameScreen->getGame().getPlayer().getScore();
         endLabel->setText(
             "VICTORY!\n\n"
-            "You defeated Drakoroth the Dragon\nand freed Aldric from his cell!\n\n"
+            "You defeated Drakoroth the Dragon\nand freed Will from his cell!\n\n"
             "The treasure is yours - and so is the glory.\n\n"
             "Final Score: " + QString::number(score) + "\n\n"
                                        "Press R to play again");
@@ -342,7 +336,7 @@ void MainWindow::showEndScreen(bool won)
         endLabel->setText(
             "DEFEATED\n\n"
             "You fell on Level " + QString::number(level) + ".\n"
-                                       "Aldric remains imprisoned...\n\n"
+                                       "Will remains imprisoned...\n\n"
                                        "Press R to try again from the beginning");
         endLabel->setStyleSheet(
             "color: #e06040; font-family: Georgia; font-size: 18px; "
@@ -358,9 +352,7 @@ void MainWindow::saveCurrentGame()
     SaveManager::saveGame(state);
 }
 
-// -------------------------------------------------------
-// Key events
-// -------------------------------------------------------
+// KEYBOARD CONTROLS
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
